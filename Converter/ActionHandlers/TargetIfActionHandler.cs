@@ -47,6 +47,7 @@ namespace SimcToBrConverter.ActionHandlers
 
             StringBuilder output = new StringBuilder();
 
+            output.AppendLine($"    -- {debugCommand}");
             output.AppendLine($"    -- {action}");
 
             if (targetIf.Contains("min:") || targetIf.Contains("max:"))

@@ -45,6 +45,7 @@ namespace SimcToBrConverter.ActionHandlers
 
             StringBuilder output = new StringBuilder();
 
+            output.AppendLine($"    -- {debugItemName}");
             output.AppendLine($"    -- {action}");
             output.AppendLine($"    if cast.able.{formattedItemName}(PLACEHOLDER){luaCondition} then");
             output.AppendLine($"        if cast.{formattedItemName}(PLACEHOLDER) then ui.debug(\"Using {debugItemName} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");

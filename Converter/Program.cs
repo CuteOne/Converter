@@ -96,9 +96,10 @@ namespace SimcToBrConverter
             foreach (var actionList in actionLists)
             {
                 string listName = actionList.Key;
+                string convertedListName = StringUtilities.ConvertToTitleCaseNoSpace(listName);
                 var actions = actionList.Value;
-                output.AppendLine($"actionList.{StringUtilities.ConvertToTitleCase(listName)} = function()");
-                output.AppendLine();
+                output.AppendLine($"-- Action List - {convertedListName}");
+                output.AppendLine($"actionList.{convertedListName} = function()");
 
                 foreach (var action in actions)
                 {
@@ -106,13 +107,17 @@ namespace SimcToBrConverter
                     {
                         if (handler.CanHandle(action))
                         {
-                            output.AppendLine(handler.Handle(listName, action));
-                            break;
+                            string convertedAction = handler.Handle(listName, action);
+                            if (!string.IsNullOrEmpty(convertedAction))
+                            {
+                                output.Append(handler.Handle(listName, action));
+                                break;
+                            }
                         }
                     }
                 }
 
-                output.AppendLine("end");
+                output.AppendLine($"end -- End Action List - {convertedListName}");
                 output.AppendLine();
             }
 

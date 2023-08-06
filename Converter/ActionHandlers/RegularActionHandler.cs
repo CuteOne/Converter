@@ -43,6 +43,7 @@ namespace SimcToBrConverter.ActionHandlers
             }
 
             // Generate the Lua code
+            output.AppendLine($"    -- {debugCommand}");
             output.AppendLine($"    -- {command}{(string.IsNullOrEmpty(condition) ? "" : ",if=" + condition)}");
             output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
             output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");

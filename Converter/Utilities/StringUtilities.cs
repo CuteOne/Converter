@@ -14,5 +14,10 @@ namespace SimcToBrConverter.Utilities
         {
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.Replace('_', ' '));
         }
+
+        public static string ConvertToTitleCaseNoSpace(string input)
+        {
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLower()).Replace("_", "");
+        }
     }
 }
