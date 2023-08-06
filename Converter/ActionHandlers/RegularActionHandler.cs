@@ -21,8 +21,6 @@ namespace SimcToBrConverter.ActionHandlers
 
         public string Handle(string listName, string action)
         {
-            var output = new StringBuilder();
-
             // Split the action into the command and condition parts
             var parts = action.Split(",if=");
             var command = parts[0];
@@ -43,6 +41,8 @@ namespace SimcToBrConverter.ActionHandlers
             }
 
             // Generate the Lua code
+            StringBuilder output = new StringBuilder();
+
             output.AppendLine($"    -- {debugCommand}");
             output.AppendLine($"    -- {command}{(string.IsNullOrEmpty(condition) ? "" : ",if=" + condition)}");
             output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");

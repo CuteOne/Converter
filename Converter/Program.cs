@@ -21,7 +21,7 @@ namespace SimcToBrConverter
             string[] profileLines = profile.Split('\n');
 
             // Parse the actions from the SimulationCraft profile
-            var actionLists = ParseActions(profileLines);
+            Dictionary<string,List<string>> actionLists = ParseActions(profileLines);
 
             // Define the condition converters
             List<IConditionConverter> conditionConverters = new List<IConditionConverter>
@@ -38,10 +38,10 @@ namespace SimcToBrConverter
             };
 
             // Generate the Lua code
-            string luaCode = GenerateLuaCode(actionLists, actionHandlers);
+            GenerateLuaCode(actionLists, actionHandlers);
 
             // Print the Lua code
-            Console.WriteLine(luaCode);
+            //Console.WriteLine(luaCode);
         }
 
         static async Task<string> DownloadProfile(string url)
@@ -50,6 +50,17 @@ namespace SimcToBrConverter
             {
                 return await client.GetStringAsync(url);
             }
+        }
+
+        private static (string ListName, string Action, string Condition) ParseActionLine(string line)
+        {
+            var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=\/|=)(?<action>([^,]|,(?!if=))*?)(,if=(?<condition>.*))?$");
+
+            var listName = match.Groups["listName"].Value;
+            var action = match.Groups["action"].Value;
+            var condition = match.Groups["condition"].Value;
+
+            return (listName, action, condition);
         }
 
         private static Dictionary<string, List<string>> ParseActions(string[] profileLines)
@@ -61,10 +72,7 @@ namespace SimcToBrConverter
             {
                 if (line.StartsWith("actions"))
                 {
-                    var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=\/|=)(?<action>([^,]|,(?!if=))*?)(,if=(?<condition>.*))?$");
-                    var listName = match.Groups["listName"].Value;
-                    var action = match.Groups["action"].Value;
-                    var condition = match.Groups["condition"].Value;
+                    var (listName, action, condition) = ParseActionLine(line);
 
                     if (!string.IsNullOrEmpty(listName))
                     {
@@ -89,7 +97,79 @@ namespace SimcToBrConverter
             return actionLists;
         }
 
-        public static string GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<IActionHandler> actionHandlers)
+        private static string GenerateActionListLuaCode(string listName, List<string> actions, List<IActionHandler> actionHandlers)
+        {
+            StringBuilder output = new StringBuilder();
+
+            output.AppendLine($"actionList.{StringUtilities.ConvertToTitleCaseNoSpace(listName)} = function()");
+
+            foreach (var action in actions)
+            {
+                foreach (var handler in actionHandlers)
+                {
+                    if (handler.CanHandle(action))
+                    {
+                        string convertedAction = handler.Handle(listName, action);
+                        if (!string.IsNullOrEmpty(convertedAction))
+                        {
+                            output.Append(convertedAction);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            output.AppendLine("end");
+            output.AppendLine();
+
+            return output.ToString();
+        }
+
+        private static void GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<IActionHandler> actionHandlers)
+        {
+            StringBuilder output = new StringBuilder();
+
+            output.AppendLine("local ui");
+            output.AppendLine("local cast");
+            output.AppendLine("local buff");
+            output.AppendLine("local debuff");
+            output.AppendLine("local enemies");
+            output.AppendLine("local unit");
+            output.AppendLine("local charges");
+            output.AppendLine("local cd");
+            output.AppendLine("local actionList = {}");
+            output.AppendLine();
+
+            foreach (var actionList in actionLists)
+            {
+                output.Append(GenerateActionListLuaCode(actionList.Key, actionList.Value, actionHandlers));
+            }
+
+            output.AppendLine("function br.rotations.profile()");
+            output.AppendLine();
+            output.AppendLine("    ui = br.ui");
+            output.AppendLine("    cast = br.player.cast");
+            output.AppendLine("    buff = br.player.buff");
+            output.AppendLine("    debuff = br.player.debuff");
+            output.AppendLine("    enemies = br.player.enemies");
+            output.AppendLine("    unit = br.player.unit");
+            output.AppendLine("    charges = br.player.charges");
+            output.AppendLine("    cd = br.player.cd");
+            output.AppendLine();
+
+            foreach (var listName in actionLists.Keys)
+            {
+                output.AppendLine($"    if actionList.{StringUtilities.ConvertToCamelCase(listName)}() then return true end");
+            }
+
+            output.AppendLine("end");
+
+            //File.WriteAllText("output.lua", output.ToString());
+            Console.WriteLine(output.ToString());
+        }
+
+
+        /*public static string GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<IActionHandler> actionHandlers)
         {
             StringBuilder output = new StringBuilder();
 
@@ -110,7 +190,7 @@ namespace SimcToBrConverter
                             string convertedAction = handler.Handle(listName, action);
                             if (!string.IsNullOrEmpty(convertedAction))
                             {
-                                output.Append(handler.Handle(listName, action));
+                                output.Append(convertedAction);
                                 break;
                             }
                         }
@@ -122,7 +202,7 @@ namespace SimcToBrConverter
             }
 
             return output.ToString();
-        }
+        }*/
 
     }
 }
