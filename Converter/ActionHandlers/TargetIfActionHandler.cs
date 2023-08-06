@@ -20,7 +20,7 @@ namespace SimcToBrConverter.ActionHandlers
             return action.Contains("target_if=");
         }
 
-        public string Handle(string action, string listName)
+        public string Handle(string listName, string action)
         {
             var match = Regex.Match(action, @"(?<command>\w+),target_if=(?<targetIf>\w+),?(?<condition>.*)");
             var command = match.Groups["command"].Value;

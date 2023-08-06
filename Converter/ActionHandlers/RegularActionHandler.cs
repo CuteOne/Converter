@@ -2,7 +2,6 @@
 using SimcToBrConverter.Utilities;
 using System.Globalization;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace SimcToBrConverter.ActionHandlers
 {
@@ -20,7 +19,7 @@ namespace SimcToBrConverter.ActionHandlers
             return !action.StartsWith("use_item") && !action.Contains("target_if=");
         }
 
-        public string Handle(string action, string listName)
+        public string Handle(string listName, string action)
         {
             var output = new StringBuilder();
 
@@ -45,7 +44,10 @@ namespace SimcToBrConverter.ActionHandlers
 
             // Generate the Lua code
             output.AppendLine($"    -- {command}{(string.IsNullOrEmpty(condition) ? "" : ",if=" + condition)}");
-            output.AppendLine($"    if cast.able.{formattedCommand}() and ({convertedCondition}) then");
+            if (string.IsNullOrEmpty(condition))
+                output.AppendLine($"    if cast.able.{formattedCommand}() then");
+            else
+                output.AppendLine($"    if cast.able.{formattedCommand}() and ({convertedCondition}) then");
             output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
             output.AppendLine("    end");
 

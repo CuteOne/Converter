@@ -98,19 +98,20 @@ namespace SimcToBrConverter
         {
             StringBuilder output = new StringBuilder();
 
-            foreach (var kvp in actionLists)
+            foreach (var actionList in actionLists)
             {
-                string listName = kvp.Key;
+                string listName = actionList.Key;
+                var actions = actionList.Value;
                 output.AppendLine($"actionList.{StringUtilities.ConvertToTitleCase(listName)} = function()");
                 output.AppendLine();
 
-                foreach (var action in kvp.Value)
+                foreach (var action in actions)
                 {
                     foreach (var handler in actionHandlers)
                     {
                         if (handler.CanHandle(action))
                         {
-                            output.AppendLine(handler.Handle(action, listName));
+                            output.AppendLine(handler.Handle(listName, action));
                             break;
                         }
                     }

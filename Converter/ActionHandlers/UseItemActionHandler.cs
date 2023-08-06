@@ -20,7 +20,7 @@ namespace SimcToBrConverter.ActionHandlers
             return action.StartsWith("use_item");
         }
 
-        public string Handle(string action, string listName)
+        public string Handle(string listName, string action)
         {
             var match = Regex.Match(action, @"use_item,name=(?<itemName>\w+),?(?<condition>.*)");
             var itemName = match.Groups["itemName"].Value;
