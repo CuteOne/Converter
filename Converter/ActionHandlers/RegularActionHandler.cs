@@ -46,8 +46,15 @@ namespace SimcToBrConverter.ActionHandlers
             StringBuilder output = new StringBuilder();
 
             output.AppendLine($"    -- {action}");
-            output.AppendLine($"    if cast.able.{formattedCommand}(PLACEHOLDER) and ({luaCondition}) then");
-            output.AppendLine($"        if cast.{formattedCommand}(PLACEHOLDER) then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
+            if (!string.IsNullOrEmpty(luaCondition))
+            {
+                output.AppendLine($"    if cast.able.{formattedCommand}() and ({luaCondition}) then");
+            }
+            else
+            {
+                output.AppendLine($"    if cast.able.{formattedCommand}() then");
+            }
+            output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
             output.AppendLine("    end");
 
             return output.ToString();

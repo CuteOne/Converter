@@ -58,8 +58,8 @@ namespace SimcToBrConverter.ActionHandlers
             {
                 output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
                 output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
-                output.AppendLine($"        if cast.able.{formattedCommand}(PLACEHOLDER) and ({luaCondition}) then");
-                output.AppendLine($"            if cast.{formattedCommand}(PLACEHOLDER) then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
+                output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit) and ({luaCondition}) then");
+                output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
                 output.AppendLine("        end");
                 output.AppendLine("    end");
             }

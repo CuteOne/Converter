@@ -2,6 +2,8 @@
 using System.Text;
 using SimcToBrConverter.ActionHandlers;
 using SimcToBrConverter.Conditions;
+using System.Globalization;
+using SimcToBrConverter.Utilities;
 
 namespace SimcToBrConverter
 {
@@ -59,7 +61,7 @@ namespace SimcToBrConverter
             {
                 if (line.StartsWith("actions"))
                 {
-                    var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=)?(?<action>.*)");
+                    var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=\/|=)(?<action>\w+)");
                     var listName = match.Groups["listName"].Value;
                     var action = match.Groups["action"].Value;
 
@@ -82,37 +84,34 @@ namespace SimcToBrConverter
             return actionLists;
         }
 
-        static string GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<IActionHandler> actionHandlers)
+        public static string GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<IActionHandler> actionHandlers)
         {
             StringBuilder output = new StringBuilder();
 
             foreach (var kvp in actionLists)
             {
-                var listName = kvp.Key;
-                var actions = kvp.Value;
-                output.AppendLine($"{listName} = function()");
-                output.AppendLine("    -- actions");
-                foreach (var action in actions)
+                string listName = kvp.Key;
+                output.AppendLine($"actionList.{StringUtilities.ConvertToTitleCase(listName)} = function()");
+                output.AppendLine();
+
+                foreach (var action in kvp.Value)
                 {
-                    var handled = false;
                     foreach (var handler in actionHandlers)
                     {
                         if (handler.CanHandle(action))
                         {
                             output.AppendLine(handler.Handle(action, listName));
-                            handled = true;
                             break;
                         }
                     }
-                    if (!handled)
-                    {
-                        output.AppendLine($"    -- {action}");
-                    }
                 }
+
                 output.AppendLine("end");
+                output.AppendLine();
             }
 
             return output.ToString();
         }
+
     }
 }
