@@ -77,11 +77,6 @@ namespace SimcToBrConverter
 
                     if (!string.IsNullOrEmpty(action))
                     {
-                        actionLists[currentList].Add(action);
-                    }
-
-                    if (!string.IsNullOrEmpty(action))
-                    {
                         if (!string.IsNullOrEmpty(condition))
                         {
                             action += $",if={condition}";

@@ -38,7 +38,8 @@ namespace SimcToBrConverter.ActionHandlers
                 {
                     if (converter.CanConvert(condition))
                     {
-                        luaCondition = converter.Convert(condition);
+                        //luaCondition = converter.Convert(condition);
+                        luaCondition = $" and ({converter.Convert(condition)})";
                         break;
                     }
                 }
@@ -50,7 +51,7 @@ namespace SimcToBrConverter.ActionHandlers
 
             if (targetIf.Contains("min:") || targetIf.Contains("max:"))
             {
-                output.AppendLine($"    if cast.able.{formattedCommand}(PLACEHOLDER) and ({luaCondition}) then");
+                output.AppendLine($"    if cast.able.{formattedCommand}(PLACEHOLDER){luaCondition} then");
                 output.AppendLine($"        if cast.{formattedCommand}(PLACEHOLDER) then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
                 output.AppendLine("    end");
             }
@@ -58,7 +59,7 @@ namespace SimcToBrConverter.ActionHandlers
             {
                 output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
                 output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
-                output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit) and ({luaCondition}) then");
+                output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit){luaCondition} then");
                 output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
                 output.AppendLine("        end");
                 output.AppendLine("    end");

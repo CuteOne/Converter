@@ -37,17 +37,14 @@ namespace SimcToBrConverter.ActionHandlers
             {
                 if (converter.CanConvert(condition))
                 {
-                    convertedCondition = converter.Convert(condition);
+                    convertedCondition = $" and ({converter.Convert(condition)})";
                     break;
                 }
             }
 
             // Generate the Lua code
             output.AppendLine($"    -- {command}{(string.IsNullOrEmpty(condition) ? "" : ",if=" + condition)}");
-            if (string.IsNullOrEmpty(condition))
-                output.AppendLine($"    if cast.able.{formattedCommand}() then");
-            else
-                output.AppendLine($"    if cast.able.{formattedCommand}() and ({convertedCondition}) then");
+            output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
             output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
             output.AppendLine("    end");
 
