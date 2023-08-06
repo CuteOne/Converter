@@ -22,38 +22,30 @@ namespace SimcToBrConverter.ActionHandlers
 
         public string Handle(string action, string listName)
         {
-            var match = Regex.Match(action, @"(?<command>\w+)(,if=(?<condition>.*))?");
-            var command = match.Groups["command"].Value;
-            var condition = match.Groups["condition"].Value;
+            var output = new StringBuilder();
 
-            string formattedCommand = StringUtilities.ConvertToCamelCase(command);
-            string debugCommand = StringUtilities.ConvertToTitleCase(command);
+            // Split the action into the command and condition parts
+            var parts = action.Split(",if=");
+            var command = parts[0];
+            var condition = parts.Length > 1 ? parts[1] : "";
 
-            string luaCondition = "";
+            var formattedCommand = StringUtilities.ConvertToCamelCase(command);
+            var debugCommand = StringUtilities.ConvertToTitleCase(command);
 
-            if (!string.IsNullOrEmpty(condition))
+            // Convert the condition
+            var convertedCondition = "";
+            foreach (var converter in _conditionConverters)
             {
-                foreach (var converter in _conditionConverters)
+                if (converter.CanConvert(condition))
                 {
-                    if (converter.CanConvert(condition))
-                    {
-                        luaCondition = converter.Convert(condition);
-                        break;
-                    }
+                    convertedCondition = converter.Convert(condition);
+                    break;
                 }
             }
 
-            StringBuilder output = new StringBuilder();
-
-            output.AppendLine($"    -- {action}");
-            if (!string.IsNullOrEmpty(luaCondition))
-            {
-                output.AppendLine($"    if cast.able.{formattedCommand}() and ({luaCondition}) then");
-            }
-            else
-            {
-                output.AppendLine($"    if cast.able.{formattedCommand}() then");
-            }
+            // Generate the Lua code
+            output.AppendLine($"    -- {command}{(string.IsNullOrEmpty(condition) ? "" : ",if=" + condition)}");
+            output.AppendLine($"    if cast.able.{formattedCommand}() and ({convertedCondition}) then");
             output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{CultureInfo.CurrentCulture.TextInfo.ToTitleCase(listName)}]\") return true end");
             output.AppendLine("    end");
 
