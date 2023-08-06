@@ -61,9 +61,10 @@ namespace SimcToBrConverter
             {
                 if (line.StartsWith("actions"))
                 {
-                    var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=\/|=)(?<action>\w+)");
+                    var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=\/|=)(?<action>([^,]|,(?!if=))*?)(,if=(?<condition>.*))?$");
                     var listName = match.Groups["listName"].Value;
                     var action = match.Groups["action"].Value;
+                    var condition = match.Groups["condition"].Value;
 
                     if (!string.IsNullOrEmpty(listName))
                     {
@@ -76,6 +77,15 @@ namespace SimcToBrConverter
 
                     if (!string.IsNullOrEmpty(action))
                     {
+                        actionLists[currentList].Add(action);
+                    }
+
+                    if (!string.IsNullOrEmpty(action))
+                    {
+                        if (!string.IsNullOrEmpty(condition))
+                        {
+                            action += $",if={condition}";
+                        }
                         actionLists[currentList].Add(action);
                     }
                 }
