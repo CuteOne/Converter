@@ -22,7 +22,7 @@ namespace SimcToBrConverter.ActionHandlers
 
         public string Handle(string action, string listName)
         {
-            var match = Regex.Match(action, @"(?<command>\w+),?(?<condition>.*)");
+            var match = Regex.Match(action, @"(?<command>\w+)(,if=(?<condition>.*))?");
             var command = match.Groups["command"].Value;
             var condition = match.Groups["condition"].Value;
 
