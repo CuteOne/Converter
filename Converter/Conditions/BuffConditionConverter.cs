@@ -6,7 +6,7 @@ namespace SimcToBrConverter.Conditions
     {
         public bool CanConvert(string condition)
         {
-            return condition.StartsWith("buff.");
+            return condition.StartsWith("buff.") || condition.StartsWith("!buff.");
         }
 
         public string Convert(string condition)
