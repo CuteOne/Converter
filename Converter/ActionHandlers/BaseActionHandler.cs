@@ -2,6 +2,7 @@
 using SimcToBrConverter.Conditions;
 using SimcToBrConverter.Utilities;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Converter.ActionHandlers
 {
@@ -32,31 +33,61 @@ namespace Converter.ActionHandlers
         {
             var notConvertedConditions = new List<string>();
             var convertedConditions = new StringBuilder();
-            var originalConditions = condition.Split(new[] { "&", "|", "!" }, StringSplitOptions.RemoveEmptyEntries);
 
-            foreach (var originalCondition in originalConditions)
+            // Check if there are no conditions
+            if (string.IsNullOrWhiteSpace(condition))
             {
-                var trimmedCondition = originalCondition.Trim();
-                var wasConverted = false;
+                return (condition, "", notConvertedConditions);
+            }
 
-                foreach (var converter in _conditionConverters)
+            // Split the condition string by the & and | symbols, and parentheses, keeping the delimiters
+            var originalConditions = Regex.Split(condition, @"([&|\(\)])");
+
+            for (int i = 0; i < originalConditions.Length; i++)
+            {
+                var trimmedCondition = originalConditions[i].Trim();
+
+                switch (trimmedCondition)
                 {
-                    if (converter.CanConvert(trimmedCondition))
-                    {
-                        convertedConditions.Append($" and ({converter.Convert(trimmedCondition)})");
-                        wasConverted = true;
+                    case "&":
+                        convertedConditions.Append(" and ");
                         break;
-                    }
-                }
+                    case "|":
+                        convertedConditions.Append(" or ");
+                        break;
+                    case "(":
+                    case ")":
+                        convertedConditions.Append(trimmedCondition);
+                        break;
+                    default:
+                        var wasConverted = false;
 
-                if (!wasConverted)
-                {
-                    notConvertedConditions.Add(trimmedCondition);
+                        foreach (var converter in _conditionConverters)
+                        {
+                            if (converter.CanConvert(trimmedCondition))
+                            {
+                                convertedConditions.Append($"{converter.Convert(trimmedCondition)}");
+                                wasConverted = true;
+                                break;
+                            }
+                        }
+
+                        if (!wasConverted)
+                        {
+                            notConvertedConditions.Add(trimmedCondition);
+                        }
+                        break;
                 }
             }
 
-            return (condition, convertedConditions.ToString(), notConvertedConditions);
+            // Wrap the entire converted conditions in "and ({convertedConditions})"
+            var finalConvertedCondition = $" and ({convertedConditions})";
+
+            return (condition, finalConvertedCondition, notConvertedConditions);
         }
+
+
+
 
         protected virtual bool UseLoopAction(string action)
         {
