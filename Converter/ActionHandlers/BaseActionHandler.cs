@@ -1,12 +1,7 @@
 ﻿using SimcToBrConverter.ActionHandlers;
 using SimcToBrConverter.Conditions;
 using SimcToBrConverter.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Converter.ActionHandlers
 {
@@ -25,27 +20,33 @@ namespace Converter.ActionHandlers
         {
             var (command, condition) = ParseAction(action);
 
-            var convertedCondition = ConvertCondition(condition);
+            var (originalCondition, convertedCondition, wasConverted) = ConvertCondition(condition);
 
-            return GenerateLuaCode(listName, command, convertedCondition, action);
+            return GenerateLuaCode(listName, command, convertedCondition, action, wasConverted, originalCondition);
         }
 
         protected abstract (string command, string condition) ParseAction(string action);
 
-        private string ConvertCondition(string condition)
+        protected (string OriginalCondition, string ConvertedCondition, bool WasConverted) ConvertCondition(string condition)
         {
             foreach (var converter in _conditionConverters)
             {
                 if (converter.CanConvert(condition))
                 {
-                    return $" and ({converter.Convert(condition)})";
+                    return (condition, $" and ({converter.Convert(condition)})", true);
                 }
             }
-
-            return "";
+            if (condition == string.Empty)
+            {
+                return (condition, condition, true);
+            }
+            else
+            {
+                return (condition, condition, false);
+            }
         }
 
-        protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action)
+        protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action, bool wasConverted, string originalCondition)
         {
             var formattedCommand = StringUtilities.ConvertToCamelCase(command);
             var debugCommand = StringUtilities.ConvertToTitleCase(command);
@@ -53,9 +54,16 @@ namespace Converter.ActionHandlers
             var output = new StringBuilder();
             output.AppendLine($"    -- {debugCommand}");
             output.AppendLine($"    -- {action}");
-            output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
-            output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
-            output.AppendLine("    end");
+            if (wasConverted)
+            {
+                output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
+                output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
+                output.AppendLine("    end");
+            } 
+            else
+            {
+                output.AppendLine($"    -- TODO: Condition '{originalCondition}' was not converted.");
+            }
 
             return output.ToString();
         }

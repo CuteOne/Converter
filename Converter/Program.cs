@@ -26,7 +26,9 @@ namespace SimcToBrConverter
             // Define the condition converters
             List<IConditionConverter> conditionConverters = new List<IConditionConverter>
             {
-                new BuffConditionConverter()
+                new BuffConditionConverter(),
+                new ChargesConditionConverter(),
+                new UnitConditionConverter()
             };
 
             // Define the action handlers
