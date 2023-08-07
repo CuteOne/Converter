@@ -58,6 +58,11 @@ namespace Converter.ActionHandlers
             return (condition, convertedConditions.ToString(), notConvertedConditions);
         }
 
+        protected virtual bool UseLoopAction(string action)
+        {
+            return false; // Default behavior in the base class
+        }
+
 
         protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action, List<string> notConvertedConditions, string originalCondition)
         {
@@ -77,9 +82,21 @@ namespace Converter.ActionHandlers
                 }
             }
 
-            output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
-            output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
-            output.AppendLine("    end");
+            if (UseLoopAction(action))
+            {
+                output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
+                output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
+                output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit){convertedCondition} then");
+                output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
+                output.AppendLine("        end");
+                output.AppendLine("    end");
+            }
+            else
+            {
+                output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
+                output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
+                output.AppendLine("    end");
+            }
 
             return output.ToString();
         }
