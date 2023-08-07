@@ -1,40 +1,39 @@
-﻿using SimcToBrConverter.Utilities;
-
-namespace SimcToBrConverter.Conditions
+﻿namespace SimcToBrConverter.Conditions
 {
-    public class BuffConditionConverter : IConditionConverter
+    public class BuffConditionConverter : BaseConditionConverter
     {
-        public bool CanConvert(string condition)
+        public override bool CanConvert(string condition)
         {
             return condition.StartsWith("buff.") || condition.StartsWith("!buff.");
         }
 
-        public string Convert(string condition)
+        protected override (string Result, bool Negate) ConvertTask(string spell, string task)
         {
-            var notFlag = condition.StartsWith("!") ? "not " : "";
-            var spell = condition.Substring(condition.IndexOf("buff.") + 5).Split('.')[0];
-            var task = condition.Substring(condition.IndexOf("buff.") + 5).Split('.')[1];
-            var formattedSpell = StringUtilities.ConvertToCamelCase(spell);
+            string result;
+            bool negate = false;
             switch (task)
             {
                 case "up":
-                    return $"{notFlag}buff.{formattedSpell}.exists()";
-                case "down":
-                    if (notFlag == "not ")
-                        return $"buff.{formattedSpell}.exists()";
-                    else
-                        return $"not buff.{formattedSpell}.exists()";
-                case "remains":
-                    return $"{notFlag}buff.{formattedSpell}.remains()";
                 case "react":
-                    return $"{notFlag}buff.{formattedSpell}.exists()";
+                    result = $"buff.{spell}.exists()";
+                    break;
+                case "down":
+                    result = $"buff.{spell}.exists()";
+                    negate = true; // Reverse the negation for "down"
+                    break;
+                case "remains":
+                    result = $"buff.{spell}.remains()";
+                    break;
                 case "stack":
-                    return $"{notFlag}buff.{formattedSpell}.count()";
                 case "value":
-                    return $"{notFlag}buff.{formattedSpell}.count()";
+                    result = $"buff.{spell}.count()";
+                    break;
                 default:
-                    return "";
+                    result = ""; // Unknown task
+                    break;
             }
+
+            return (result, negate);
         }
     }
 }

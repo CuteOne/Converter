@@ -1,16 +1,27 @@
 ﻿namespace SimcToBrConverter.Conditions
 {
-    public class UnitConditionConverter : IConditionConverter
+    public class UnitConditionConverter : BaseConditionConverter
     {
-        public bool CanConvert(string condition)
+        public override bool CanConvert(string condition)
         {
-            return condition.StartsWith("target.time_to_die");
+            return condition.StartsWith("target.");
         }
 
-        public string Convert(string condition)
+        protected override (string Result, bool Negate) ConvertTask(string spell, string task)
         {
-            return "unit.ttd(var.minTtdBs)";
+            string result;
+            bool negate = false;
+            switch (task)
+            {
+                case "time_to_die":
+                    result = "unit.ttd(PLACEHOLDER)";
+                    break;
+                default:
+                    result = ""; // Return an empty string or handle the default case as needed
+                    break;
+            }
+
+            return (result, negate);
         }
     }
-
 }
