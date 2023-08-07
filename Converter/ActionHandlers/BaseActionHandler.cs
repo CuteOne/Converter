@@ -20,33 +20,46 @@ namespace Converter.ActionHandlers
         {
             var (command, condition) = ParseAction(action);
 
-            var (originalCondition, convertedCondition, wasConverted) = ConvertCondition(condition);
+            var (originalCondition, convertedCondition, notConvertedConditions) = ConvertCondition(condition);
 
-            return GenerateLuaCode(listName, command, convertedCondition, action, wasConverted, originalCondition);
+            return GenerateLuaCode(listName, command, convertedCondition, action, notConvertedConditions, originalCondition);
         }
+
 
         protected abstract (string command, string condition) ParseAction(string action);
 
-        protected (string OriginalCondition, string ConvertedCondition, bool WasConverted) ConvertCondition(string condition)
+        protected (string OriginalCondition, string ConvertedCondition, List<string> NotConvertedConditions) ConvertCondition(string condition)
         {
-            foreach (var converter in _conditionConverters)
+            var notConvertedConditions = new List<string>();
+            var convertedConditions = new StringBuilder();
+            var originalConditions = condition.Split(new[] { "&", "|", "!" }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var originalCondition in originalConditions)
             {
-                if (converter.CanConvert(condition))
+                var trimmedCondition = originalCondition.Trim();
+                var wasConverted = false;
+
+                foreach (var converter in _conditionConverters)
                 {
-                    return (condition, $" and ({converter.Convert(condition)})", true);
+                    if (converter.CanConvert(trimmedCondition))
+                    {
+                        convertedConditions.Append($" and ({converter.Convert(trimmedCondition)})");
+                        wasConverted = true;
+                        break;
+                    }
+                }
+
+                if (!wasConverted)
+                {
+                    notConvertedConditions.Add(trimmedCondition);
                 }
             }
-            if (condition == string.Empty)
-            {
-                return (condition, condition, true);
-            }
-            else
-            {
-                return (condition, condition, false);
-            }
+
+            return (condition, convertedConditions.ToString(), notConvertedConditions);
         }
 
-        protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action, bool wasConverted, string originalCondition)
+
+        protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action, List<string> notConvertedConditions, string originalCondition)
         {
             var formattedCommand = StringUtilities.ConvertToCamelCase(command);
             var debugCommand = StringUtilities.ConvertToTitleCase(command);
@@ -54,18 +67,22 @@ namespace Converter.ActionHandlers
             var output = new StringBuilder();
             output.AppendLine($"    -- {debugCommand}");
             output.AppendLine($"    -- {action}");
-            if (wasConverted)
+
+            if (notConvertedConditions.Any())
             {
-                output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
-                output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
-                output.AppendLine("    end");
-            } 
-            else
-            {
-                output.AppendLine($"    -- TODO: Condition '{originalCondition}' was not converted.");
+                output.AppendLine($"    -- TODO: The following conditions were not converted:");
+                foreach (var notConvertedCondition in notConvertedConditions)
+                {
+                    output.AppendLine($"    -- {notConvertedCondition}");
+                }
             }
+
+            output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
+            output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
+            output.AppendLine("    end");
 
             return output.ToString();
         }
+
     }
 }

@@ -22,7 +22,7 @@ public class TargetIfActionHandler : BaseActionHandler
         return (command, condition);
     }
 
-    protected override string GenerateLuaCode(string listName, string command, string convertedCondition, string action, bool wasConverted, string originalCondition)
+    protected override string GenerateLuaCode(string listName, string command, string convertedCondition, string action, List<string> notConvertedConditions, string originalCondition)
     {
         var formattedCommand = StringUtilities.ConvertToCamelCase(command);
         var debugCommand = StringUtilities.ConvertToTitleCase(command);
@@ -31,30 +31,32 @@ public class TargetIfActionHandler : BaseActionHandler
         output.AppendLine($"    -- {debugCommand}");
         output.AppendLine($"    -- {action}");
 
-        if (wasConverted)
+        if (notConvertedConditions.Any())
         {
-            if (action.Contains("min:") || action.Contains("max:"))
+            output.AppendLine($"    -- TODO: The following conditions were not converted:");
+            foreach (var notConvertedCondition in notConvertedConditions)
             {
-                output.AppendLine($"    if cast.able.{formattedCommand}(PLACEHOLDER){convertedCondition} then");
-                output.AppendLine($"        if cast.{formattedCommand}(PLACEHOLDER) then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
-                output.AppendLine("    end");
+                output.AppendLine($"    -- {notConvertedCondition}");
             }
-            else
-            {
-                output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
-                output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
-                output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit){convertedCondition} then");
-                output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
-                output.AppendLine("        end");
-                output.AppendLine("    end");
-            }
+        }
+
+        if (action.Contains("min:") || action.Contains("max:"))
+        {
+            output.AppendLine($"    if cast.able.{formattedCommand}(PLACEHOLDER){convertedCondition} then");
+            output.AppendLine($"        if cast.{formattedCommand}(PLACEHOLDER) then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
+            output.AppendLine("    end");
         }
         else
         {
-            output.AppendLine($"    -- TODO: Condition '{originalCondition}' was not converted.");
+            output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
+            output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
+            output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit){convertedCondition} then");
+            output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
+            output.AppendLine("        end");
+            output.AppendLine("    end");
         }
-
 
         return output.ToString();
     }
+
 }
