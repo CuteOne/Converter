@@ -12,26 +12,52 @@ namespace Converter.ActionHandlers
 {
     public abstract class BaseActionHandler : IActionHandler
     {
-        protected readonly List<IConditionConverter> conditionConverters;
+        protected readonly List<IConditionConverter> _conditionConverters;
 
         protected BaseActionHandler(List<IConditionConverter> conditionConverters)
         {
-            this.conditionConverters = conditionConverters;
+            _conditionConverters = conditionConverters;
         }
 
         public abstract bool CanHandle(string action);
 
-        public string Handle(string action, string listName)
+        public string Handle(string listName, string action)
         {
-            var match = Regex.Match(action, @"(?<command>\w+)(,if=(?<condition>.*))?");
-            var command = match.Groups["command"].Value;
-            var condition = match.Groups["condition"].Value;
+            var (command, condition) = ParseAction(action);
 
-            var formattedCommand = StringUtilities.ConvertToCamelCase(command);
+            var convertedCondition = ConvertCondition(condition);
 
-            return GenerateLuaCode(formattedCommand, condition, listName);
+            return GenerateLuaCode(listName, command, convertedCondition, action);
         }
 
-        protected abstract string GenerateLuaCode(string command, string condition, string listName);
+        protected abstract (string command, string condition) ParseAction(string action);
+
+        private string ConvertCondition(string condition)
+        {
+            foreach (var converter in _conditionConverters)
+            {
+                if (converter.CanConvert(condition))
+                {
+                    return $" and ({converter.Convert(condition)})";
+                }
+            }
+
+            return "";
+        }
+
+        protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action)
+        {
+            var formattedCommand = StringUtilities.ConvertToCamelCase(command);
+            var debugCommand = StringUtilities.ConvertToTitleCase(command);
+
+            var output = new StringBuilder();
+            output.AppendLine($"    -- {debugCommand}");
+            output.AppendLine($"    -- {action}");
+            output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
+            output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
+            output.AppendLine("    end");
+
+            return output.ToString();
+        }
     }
 }
