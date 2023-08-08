@@ -5,7 +5,7 @@
         // Override the ConditionPrefix property to specify the correct prefix
         protected override string ConditionPrefix => "buff.";
 
-        protected override (string Result, bool Negate) ConvertTask(string spell, string task)
+        public override (string Result, bool Negate) ConvertTask(string spell, string task, string command)
         {
             string result;
             bool negate = false;

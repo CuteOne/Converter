@@ -21,7 +21,7 @@ namespace Converter.ActionHandlers
         {
             var (command, condition) = ParseAction(action);
 
-            var (originalCondition, convertedCondition, notConvertedConditions) = ConvertCondition(condition);
+            var (originalCondition, convertedCondition, notConvertedConditions) = ConvertCondition(condition, command);
 
             return GenerateLuaCode(listName, command, convertedCondition, action, notConvertedConditions, originalCondition);
         }
@@ -29,7 +29,7 @@ namespace Converter.ActionHandlers
 
         protected abstract (string command, string condition) ParseAction(string action);
 
-        protected (string OriginalCondition, string ConvertedCondition, List<string> NotConvertedConditions) ConvertCondition(string condition)
+        protected (string OriginalCondition, string ConvertedCondition, List<string> NotConvertedConditions) ConvertCondition(string condition, string command)
         {
             var notConvertedConditions = new List<string>();
             var convertedConditions = new StringBuilder();
@@ -66,7 +66,7 @@ namespace Converter.ActionHandlers
                         {
                             if (converter.CanConvert(trimmedCondition))
                             {
-                                convertedConditions.Append($"{converter.Convert(trimmedCondition)}");
+                                convertedConditions.Append($"{converter.Convert(trimmedCondition, command, _conditionConverters)}");
                                 wasConverted = true;
                                 break;
                             }

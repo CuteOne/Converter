@@ -14,41 +14,59 @@ namespace SimcToBrConverter.Conditions
             return condition.StartsWith(ConditionPrefix) || condition.StartsWith("!" + ConditionPrefix);
         }
 
-        public string Convert(string condition)
+        public string Convert(string condition, string command, List<IConditionConverter> conditionConverters)
         {
             bool isNegated = condition.StartsWith("!");
-            var parts = condition.TrimStart('!').Split('.');
-            var conditionType = parts[0]; // e.g., "buff", "talent", etc.
-            var spell = StringUtilities.ConvertToCamelCase(parts[1]);
-            var task = parts.Length > 2 ? parts[2] : ""; // If no task is present, assign ""
+            condition = condition.TrimStart('!');
 
-            // Extract any comparison operator and value from the task
-            string comparisonOperator = "";
-            string comparisonValue = "";
-            var match = Regex.Match(task, @"(\w+)([<>=!]+)(\d+)");
-            if (match.Success)
+            // Split the condition into parts based on comparison operators
+            var parts = Regex.Split(condition, @"([<>=!]+)");
+            var convertedParts = new List<string>();
+
+            // Convert each part separately
+            foreach (var part in parts)
             {
-                task = match.Groups[1].Value;
-                comparisonOperator = match.Groups[2].Value;
-                comparisonValue = match.Groups[3].Value;
+                if (part.Length == 0) continue;
+
+                // Check if the part is a comparison operator
+                if (Regex.IsMatch(part, @"^[<>=!]+$"))
+                {
+                    convertedParts.Add(part);
+                }
+                else
+                {
+                    // Split the part into conditionType, spell, and task
+                    var subparts = part.Split('.');
+                    var conditionType = subparts[0];
+                    var spell = subparts.Length > 1 ? StringUtilities.ConvertToCamelCase(subparts[1]) : "";
+                    var task = subparts.Length > 2 ? subparts[2] : "";
+                    if (string.IsNullOrEmpty(spell) && string.IsNullOrEmpty(task))
+                        task = conditionType;
+
+                    // Convert the part using the appropriate condition converter
+                    string result = "";
+                    bool negate = false;
+                    foreach (var converter in conditionConverters)
+                    {
+                        if (converter.CanConvert(part))
+                        {
+                            (result, negate) = converter.ConvertTask(spell, task, command);
+                            break;
+                        }
+                    }
+                    if (isNegated ^ negate) // XOR to combine the two negation flags
+                    {
+                        result = $"not {result}";
+                    }
+                    convertedParts.Add(result);
+                }
             }
 
-            (string result, bool negate) = ConvertTask(spell, task);
-
-            // Append the comparison operator and value if present
-            if (!string.IsNullOrEmpty(comparisonOperator))
-                result += " " + comparisonOperator + " " + comparisonValue;
-                
-
-            // Apply negation if necessary
-            if (isNegated ^ negate) // XOR to combine the two negation flags
-            {
-                result = $"not {result}";
-            }
-
-            return result;
+            // Combine the converted parts
+            var finalResult = string.Join(" ", convertedParts);
+            return finalResult;
         }
 
-        protected abstract (string Result, bool Negate) ConvertTask(string spell, string task);
+        public abstract (string Result, bool Negate) ConvertTask(string spell, string task, string command);
     }
 }

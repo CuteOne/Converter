@@ -1,8 +1,6 @@
 ﻿using Converter.ActionHandlers;
 using SimcToBrConverter.Conditions;
-using SimcToBrConverter.Utilities;
 using System.Text.RegularExpressions;
-using System.Text;
 
 public class TargetIfActionHandler : BaseActionHandler
 {

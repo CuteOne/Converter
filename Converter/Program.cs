@@ -29,6 +29,7 @@ namespace SimcToBrConverter
                 new BuffConditionConverter(),
                 new CooldownConditionConverter(),
                 new DotConditionConverter(),
+                new SpecialCaseConditionConverter(),
                 new SpellTargetsConditionConverter(),
                 new TalentConditionConverter(),
                 new UnitConditionConverter()
