@@ -1,9 +1,9 @@
 ﻿namespace SimcToBrConverter.Conditions
 {
-    public class UnitConditionConverter : BaseConditionConverter
+    public class TalentConditionConverter : BaseConditionConverter
     {
         // Override the ConditionPrefix property to specify the correct prefix
-        protected override string ConditionPrefix => "target.";
+        protected override string ConditionPrefix => "talent.";
 
         protected override (string Result, bool Negate) ConvertTask(string spell, string task)
         {
@@ -11,8 +11,9 @@
             bool negate = false;
             switch (task)
             {
-                case "time_to_die":
-                    result = "unit.ttd(PLACEHOLDER)";
+                case "enabled":
+                case "":
+                    result = $"talent.{spell}";
                     break;
                 default:
                     result = ""; // Return an empty string or handle the default case as needed

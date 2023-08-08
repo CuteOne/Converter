@@ -2,7 +2,6 @@
 using System.Text;
 using SimcToBrConverter.ActionHandlers;
 using SimcToBrConverter.Conditions;
-using System.Globalization;
 using SimcToBrConverter.Utilities;
 
 namespace SimcToBrConverter
@@ -26,8 +25,12 @@ namespace SimcToBrConverter
             // Define the condition converters
             List<IConditionConverter> conditionConverters = new List<IConditionConverter>
             {
+                new ActionConditionConverter(),
                 new BuffConditionConverter(),
-                new ChargesConditionConverter(),
+                new CooldownConditionConverter(),
+                new DotConditionConverter(),
+                new SpellTargetsConditionConverter(),
+                new TalentConditionConverter(),
                 new UnitConditionConverter()
             };
 
@@ -169,42 +172,5 @@ namespace SimcToBrConverter
             //File.WriteAllText("output.lua", output.ToString());
             Console.WriteLine(output.ToString());
         }
-
-
-        /*public static string GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<IActionHandler> actionHandlers)
-        {
-            StringBuilder output = new StringBuilder();
-
-            foreach (var actionList in actionLists)
-            {
-                string listName = actionList.Key;
-                string convertedListName = StringUtilities.ConvertToTitleCaseNoSpace(listName);
-                var actions = actionList.Value;
-                output.AppendLine($"-- Action List - {convertedListName}");
-                output.AppendLine($"actionList.{convertedListName} = function()");
-
-                foreach (var action in actions)
-                {
-                    foreach (var handler in actionHandlers)
-                    {
-                        if (handler.CanHandle(action))
-                        {
-                            string convertedAction = handler.Handle(listName, action);
-                            if (!string.IsNullOrEmpty(convertedAction))
-                            {
-                                output.Append(convertedAction);
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                output.AppendLine($"end -- End Action List - {convertedListName}");
-                output.AppendLine();
-            }
-
-            return output.ToString();
-        }*/
-
     }
 }

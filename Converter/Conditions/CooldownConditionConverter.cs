@@ -1,11 +1,9 @@
 ﻿namespace SimcToBrConverter.Conditions
 {
-    public class ChargesConditionConverter : BaseConditionConverter
+    public class CooldownConditionConverter : BaseConditionConverter
     {
-        public override bool CanConvert(string condition)
-        {
-            return condition.StartsWith("cooldown.") && condition.Contains(".full_recharge_time");
-        }
+        // Override the ConditionPrefix property to specify the correct prefix
+        protected override string ConditionPrefix => "cooldown.";
 
         protected override (string Result, bool Negate) ConvertTask(string spell, string task)
         {

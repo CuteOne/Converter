@@ -104,12 +104,13 @@ namespace Converter.ActionHandlers
             output.AppendLine($"    -- {debugCommand}");
             output.AppendLine($"    -- {action}");
 
-            if (notConvertedConditions.Any())
+            if (notConvertedConditions.Any(s => !string.IsNullOrEmpty(s)))
             {
                 output.AppendLine($"    -- TODO: The following conditions were not converted:");
                 foreach (var notConvertedCondition in notConvertedConditions)
                 {
-                    output.AppendLine($"    -- {notConvertedCondition}");
+                    if (!string.IsNullOrEmpty(notConvertedCondition))
+                        output.AppendLine($"    -- {notConvertedCondition}");
                 }
             }
 

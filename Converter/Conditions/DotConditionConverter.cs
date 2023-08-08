@@ -1,9 +1,9 @@
 ﻿namespace SimcToBrConverter.Conditions
 {
-    public class BuffConditionConverter : BaseConditionConverter
+    public class DotConditionConverter : BaseConditionConverter
     {
         // Override the ConditionPrefix property to specify the correct prefix
-        protected override string ConditionPrefix => "buff.";
+        protected override string ConditionPrefix => "dot.";
 
         protected override (string Result, bool Negate) ConvertTask(string spell, string task)
         {
@@ -13,18 +13,24 @@
             {
                 case "up":
                 case "react":
-                    result = $"buff.{spell}.exists()";
+                    result = $"dot.{spell}.exists()";
                     break;
                 case "down":
-                    result = $"buff.{spell}.exists()";
+                    result = $"dot.{spell}.exists()";
                     negate = true; // Reverse the negation for "down"
                     break;
                 case "remains":
-                    result = $"buff.{spell}.remains()";
+                    result = $"dot.{spell}.remains()";
                     break;
                 case "stack":
                 case "value":
-                    result = $"buff.{spell}.count()";
+                    result = $"dot.{spell}.count()";
+                    break;
+                case "refreshable":
+                    result = $"dot.{spell}.refresh()";
+                    break;
+                case "pmultiplier":
+                    result = $"dot.{spell}.pmultiplier()";
                     break;
                 default:
                     result = ""; // Unknown task

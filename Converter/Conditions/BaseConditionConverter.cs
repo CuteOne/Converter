@@ -5,19 +5,22 @@ namespace SimcToBrConverter.Conditions
 {
     public abstract class BaseConditionConverter : IConditionConverter
     {
-        public abstract bool CanConvert(string condition);
+        // Virtual property that derived classes can override to specify the prefix
+        protected virtual string ConditionPrefix => "";
+
+        // Virtual method that derived classes can override if they need custom logic
+        public virtual bool CanConvert(string condition)
+        {
+            return condition.StartsWith(ConditionPrefix) || condition.StartsWith("!" + ConditionPrefix);
+        }
 
         public string Convert(string condition)
         {
             bool isNegated = condition.StartsWith("!");
             var parts = condition.TrimStart('!').Split('.');
-            var spell = StringUtilities.ConvertToCamelCase(parts[0]);
-            var task = parts[1];
-            if (parts.Length > 2)
-            {
-                spell = StringUtilities.ConvertToCamelCase(parts[1]);
-                task = parts[2];
-            }
+            var conditionType = parts[0]; // e.g., "buff", "talent", etc.
+            var spell = StringUtilities.ConvertToCamelCase(parts[1]);
+            var task = parts.Length > 2 ? parts[2] : ""; // If no task is present, assign ""
 
             // Extract any comparison operator and value from the task
             string comparisonOperator = "";
@@ -33,7 +36,9 @@ namespace SimcToBrConverter.Conditions
             (string result, bool negate) = ConvertTask(spell, task);
 
             // Append the comparison operator and value if present
-            result += comparisonOperator + comparisonValue;
+            if (!string.IsNullOrEmpty(comparisonOperator))
+                result += " " + comparisonOperator + " " + comparisonValue;
+                
 
             // Apply negation if necessary
             if (isNegated ^ negate) // XOR to combine the two negation flags
