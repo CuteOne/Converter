@@ -20,7 +20,7 @@ namespace SimcToBrConverter
             string[] profileLines = profile.Split('\n');
 
             // Parse the actions from the SimulationCraft profile
-            Dictionary<string,List<string>> actionLists = ParseActions(profileLines);
+            var (actionLists, standaloneActions) = ParseActions(profileLines); // Modified to handle standalone actions
 
             // Define the condition converters
             List<IConditionConverter> conditionConverters = new List<IConditionConverter>
@@ -47,7 +47,7 @@ namespace SimcToBrConverter
             };
 
             // Generate the Lua code
-            GenerateLuaCode(actionLists, actionHandlers);
+            GenerateLuaCode(actionLists, standaloneActions, actionHandlers);
 
             // Print the Lua code
             //Console.WriteLine(luaCode);
@@ -63,7 +63,8 @@ namespace SimcToBrConverter
 
         private static (string ListName, string Action, string Condition) ParseActionLine(string line)
         {
-            var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=\/|=)(?<action>([^,]|,(?!if=))*?)(,if=(?<condition>.*))?$");
+            //var match = Regex.Match(line, @"actions\.(?<listName>\w+)(\+=\/|=)(?<action>([^,]|,(?!if=))*?)(,if=(?<condition>.*))?$");
+            var match = Regex.Match(line, @"actions(\.(?<listName>\w+))?(\+=\/|=)(?<action>([^,]|,(?!if=))*?)(,if=(?<condition>.*))?$");
 
             var listName = match.Groups["listName"].Value;
             var action = match.Groups["action"].Value;
@@ -72,9 +73,10 @@ namespace SimcToBrConverter
             return (listName, action, condition);
         }
 
-        private static Dictionary<string, List<string>> ParseActions(string[] profileLines)
+        private static (Dictionary<string, List<string>>, List<string>) ParseActions(string[] profileLines)
         {
             Dictionary<string, List<string>> actionLists = new Dictionary<string, List<string>>();
+            List<string> standaloneActions = new List<string>(); // List to store standalone actions
             string currentList = "";
 
             foreach (var line in profileLines)
@@ -83,27 +85,31 @@ namespace SimcToBrConverter
                 {
                     var (listName, action, condition) = ParseActionLine(line);
 
-                    if (!string.IsNullOrEmpty(listName))
+                    if (string.IsNullOrEmpty(listName)) // Standalone action
+                    {
+                        standaloneActions.Add(action + (string.IsNullOrEmpty(condition) ? "" : $",if={condition}"));
+                    }
+                    else
                     {
                         currentList = listName;
                         if (!actionLists.ContainsKey(currentList))
                         {
                             actionLists[currentList] = new List<string>();
                         }
-                    }
 
-                    if (!string.IsNullOrEmpty(action))
-                    {
-                        if (!string.IsNullOrEmpty(condition))
+                        if (!string.IsNullOrEmpty(action))
                         {
-                            action += $",if={condition}";
+                            if (!string.IsNullOrEmpty(condition))
+                            {
+                                action += $",if={condition}";
+                            }
+                            actionLists[currentList].Add(action);
                         }
-                        actionLists[currentList].Add(action);
                     }
                 }
             }
 
-            return actionLists;
+            return (actionLists, standaloneActions); // Return both regular and standalone actions
         }
 
         private static string GenerateActionListLuaCode(string listName, List<string> actions, List<IActionHandler> actionHandlers)
@@ -134,7 +140,7 @@ namespace SimcToBrConverter
             return output.ToString();
         }
 
-        private static void GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<IActionHandler> actionHandlers)
+        private static void GenerateLuaCode(Dictionary<string, List<string>> actionLists, List<string> standaloneActions, List<IActionHandler> actionHandlers)
         {
             StringBuilder output = new StringBuilder();
 
@@ -166,9 +172,21 @@ namespace SimcToBrConverter
             output.AppendLine("    cd = br.player.cd");
             output.AppendLine();
 
-            foreach (var listName in actionLists.Keys)
+            // Handle standalone actions
+            foreach (var action in standaloneActions)
             {
-                output.AppendLine($"    if actionList.{StringUtilities.ConvertToCamelCase(listName)}() then return true end");
+                foreach (var handler in actionHandlers)
+                {
+                    if (handler.CanHandle(action))
+                    {
+                        string convertedAction = handler.Handle("", action); // No list name for standalone actions
+                        if (!string.IsNullOrEmpty(convertedAction))
+                        {
+                            output.Append(convertedAction);
+                            break;
+                        }
+                    }
+                }
             }
 
             output.AppendLine("end");
