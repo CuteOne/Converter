@@ -29,6 +29,7 @@ namespace SimcToBrConverter
                 new BuffConditionConverter(),
                 new CooldownConditionConverter(),
                 new DotConditionConverter(),
+                new GCDConditionConverter(),
                 new SpecialCaseConditionConverter(),
                 new SpellTargetsConditionConverter(),
                 new TalentConditionConverter(),
@@ -39,6 +40,7 @@ namespace SimcToBrConverter
             // Define the action handlers
             List<IActionHandler> actionHandlers = new List<IActionHandler>
             {
+                new ActionListActionHandler(conditionConverters),
                 new RegularActionHandler(conditionConverters),
                 new TargetIfActionHandler(conditionConverters),
                 new UseItemActionHandler(conditionConverters)

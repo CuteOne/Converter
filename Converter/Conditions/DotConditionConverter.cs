@@ -2,8 +2,11 @@
 {
     public class DotConditionConverter : BaseConditionConverter
     {
-        // Override the ConditionPrefix property to specify the correct prefix
-        protected override string ConditionPrefix => "dot.";
+        // Override the CanConvert method to handle both "dot" and "debuff" prefixes
+        public override bool CanConvert(string condition)
+        {
+            return condition.StartsWith("dot.") || condition.StartsWith("debuff.");
+        }
 
         public override (string Result, bool Negate, bool Converted) ConvertTask(string spell, string task, string command)
         {
@@ -14,24 +17,24 @@
             {
                 case "up":
                 case "react":
-                    result = $"dot.{spell}.exists()";
+                    result = $"debuff.{spell}.exists()";
                     break;
                 case "down":
-                    result = $"dot.{spell}.exists()";
+                    result = $"debuff.{spell}.exists()";
                     negate = true; // Reverse the negation for "down"
                     break;
                 case "remains":
-                    result = $"dot.{spell}.remains()";
+                    result = $"debuff.{spell}.remains()";
                     break;
                 case "stack":
                 case "value":
-                    result = $"dot.{spell}.count()";
+                    result = $"debuff.{spell}.count()";
                     break;
                 case "refreshable":
-                    result = $"dot.{spell}.refresh()";
+                    result = $"debuff.{spell}.refresh()";
                     break;
                 case "pmultiplier":
-                    result = $"dot.{spell}.pmultiplier()";
+                    result = $"debuff.{spell}.pmultiplier()";
                     break;
                 default:
                     result = ""; // Unknown task

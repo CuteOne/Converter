@@ -99,6 +99,11 @@ namespace Converter.ActionHandlers
             return false; // Default behavior in the base class
         }
 
+        protected virtual bool ActionListAction(string action)
+        {
+            return false; // Default behavior in the base class
+        }
+
 
         protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action, List<string> notConvertedConditions, string originalCondition)
         {
@@ -119,7 +124,21 @@ namespace Converter.ActionHandlers
                 }
             }
 
-            if (UseLoopAction(action))
+            if (ActionListAction(action))
+            {
+                var actionListCommand = StringUtilities.ConvertToTitleCaseNoSpace(command);
+                // Check for the specific case
+                if (convertedCondition.StartsWith(" and (") && convertedCondition.EndsWith(")"))
+                {
+                    // Remove the specific parts
+                    convertedCondition = convertedCondition.Replace(" and (", "");
+                    convertedCondition = convertedCondition.Remove(convertedCondition.Length - 1);
+                }
+                output.AppendLine($"    if {convertedCondition} then");
+                output.AppendLine($"        if actionList.{actionListCommand}() then return true end");
+                output.AppendLine("    end");
+            }
+            else if (UseLoopAction(action))
             {
                 output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
                 output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
