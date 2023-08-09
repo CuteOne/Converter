@@ -41,7 +41,7 @@ namespace Converter.ActionHandlers
             }
 
             // Split the condition string by the & and | symbols, and parentheses, keeping the delimiters
-            var originalConditions = Regex.Split(condition, @"([&|\(\)])");
+            var originalConditions = Regex.Split(condition, @"([&|\(\)!])");
 
             for (int i = 0; i < originalConditions.Length; i++)
             {
@@ -55,6 +55,9 @@ namespace Converter.ActionHandlers
                     case "|":
                         convertedConditions.Append(" or ");
                         break;
+                    case "!":
+                        convertedConditions.Append("not ");
+                        break;
                     case "(":
                     case ")":
                         convertedConditions.Append(trimmedCondition);
@@ -66,7 +69,9 @@ namespace Converter.ActionHandlers
                         {
                             if (converter.CanConvert(trimmedCondition))
                             {
-                                convertedConditions.Append($"{converter.Convert(trimmedCondition, command, _conditionConverters)}");
+                                var (convertedPart, notConvertedParts) = converter.Convert(trimmedCondition, command, _conditionConverters);
+                                convertedConditions.Append(convertedPart);
+                                notConvertedConditions.AddRange(notConvertedParts);
                                 wasConverted = true;
                                 break;
                             }

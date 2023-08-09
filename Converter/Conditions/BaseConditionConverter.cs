@@ -11,17 +11,23 @@ namespace SimcToBrConverter.Conditions
         // Virtual method that derived classes can override if they need custom logic
         public virtual bool CanConvert(string condition)
         {
-            return condition.StartsWith(ConditionPrefix) || condition.StartsWith("!" + ConditionPrefix);
+            return condition.StartsWith(ConditionPrefix);
         }
 
-        public string Convert(string condition, string command, List<IConditionConverter> conditionConverters)
+        private static readonly HashSet<string> TaskConditionTypes = new HashSet<string>
         {
-            bool isNegated = condition.StartsWith("!");
-            condition = condition.TrimStart('!');
+            "target" // Add other condition types that consider the second part as a task
+        };
+
+
+        public (string ConvertedCondition, List<string> NotConvertedParts) Convert(string condition, string command, List<IConditionConverter> conditionConverters)
+        {
+            var formattedCommand = StringUtilities.ConvertToCamelCase(command);
 
             // Split the condition into parts based on comparison operators
-            var parts = Regex.Split(condition, @"([<>=!]+)");
+            var parts = Regex.Split(condition, @"([<>=]+)");
             var convertedParts = new List<string>();
+            var notConvertedParts = new List<string>();
 
             // Convert each part separately
             foreach (var part in parts)
@@ -29,7 +35,12 @@ namespace SimcToBrConverter.Conditions
                 if (part.Length == 0) continue;
 
                 // Check if the part is a comparison operator
-                if (Regex.IsMatch(part, @"^[<>=!]+$"))
+                if (Regex.IsMatch(part, @"^[<>=]+$"))
+                {
+                    convertedParts.Add(part);
+                }
+                // Check if the part is a number
+                else if (double.TryParse(part, out _))
                 {
                     convertedParts.Add(part);
                 }
@@ -38,23 +49,48 @@ namespace SimcToBrConverter.Conditions
                     // Split the part into conditionType, spell, and task
                     var subparts = part.Split('.');
                     var conditionType = subparts[0];
-                    var spell = subparts.Length > 1 ? StringUtilities.ConvertToCamelCase(subparts[1]) : "";
-                    var task = subparts.Length > 2 ? subparts[2] : "";
-                    if (string.IsNullOrEmpty(spell) && string.IsNullOrEmpty(task))
+                    var isTask = TaskConditionTypes.Contains(conditionType);
+                    var spell = "";
+                    var task = "";
+
+                    // Handle different formats
+                    if (subparts.Length == 1)
+                    {
                         task = conditionType;
+                        conditionType = ""; // Reset conditionType if it's actually a task
+                    }
+                    else if (subparts.Length == 2)
+                    {
+                        if (isTask)
+                        {
+                            task = subparts[1];
+                        }
+                        else
+                        {
+                            spell = StringUtilities.ConvertToCamelCase(subparts[1]);
+                        }
+                    }
+                    else if (subparts.Length > 2)
+                    {
+                        spell = StringUtilities.ConvertToCamelCase(subparts[1]);
+                        task = subparts[2];
+                    }
 
                     // Convert the part using the appropriate condition converter
                     string result = "";
                     bool negate = false;
+                    bool converted = true;
                     foreach (var converter in conditionConverters)
                     {
                         if (converter.CanConvert(part))
                         {
-                            (result, negate) = converter.ConvertTask(spell, task, command);
+                            (result, negate, converted) = converter.ConvertTask(spell, task, formattedCommand);
                             break;
                         }
                     }
-                    if (isNegated ^ negate) // XOR to combine the two negation flags
+                    if (!converted)
+                        notConvertedParts.Add(part);
+                    if (negate) // XOR to combine the two negation flags
                     {
                         result = $"not {result}";
                     }
@@ -64,9 +100,9 @@ namespace SimcToBrConverter.Conditions
 
             // Combine the converted parts
             var finalResult = string.Join(" ", convertedParts);
-            return finalResult;
+            return (finalResult, notConvertedParts);
         }
 
-        public abstract (string Result, bool Negate) ConvertTask(string spell, string task, string command);
+        public abstract (string Result, bool Negate, bool Converted) ConvertTask(string spell, string task, string command);
     }
 }

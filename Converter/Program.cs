@@ -32,7 +32,8 @@ namespace SimcToBrConverter
                 new SpecialCaseConditionConverter(),
                 new SpellTargetsConditionConverter(),
                 new TalentConditionConverter(),
-                new UnitConditionConverter()
+                new UnitConditionConverter(),
+                new VariableConditionConverter()
             };
 
             // Define the action handlers
