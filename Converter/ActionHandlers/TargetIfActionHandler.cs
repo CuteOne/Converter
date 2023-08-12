@@ -1,50 +1,47 @@
 ﻿using Converter.ActionHandlers;
+using SimcToBrConverter;
 using SimcToBrConverter.Conditions;
 using System.Text.RegularExpressions;
+using static SimcToBrConverter.ActionLineParser;
 
-public class TargetIfActionHandler : BaseActionHandler
+namespace SimcToBrConverter.ActionHandlers
 {
-    public TargetIfActionHandler(List<IConditionConverter> conditionConverters) : base(conditionConverters) { }
-
-    public override bool CanHandle(string action)
+    public class TargetIfActionHandler : BaseActionHandler
     {
-        return action.Contains("target_if=");
-    }
+        public TargetIfActionHandler(List<IConditionConverter> conditionConverters) : base(conditionConverters) { }
 
-    protected override (string command, string condition) ParseAction(string action)
-    {
-        string command;
-        string condition;
-        string additionalCondition = "";
-        Match match;
-
-        // Check if the action contains ",if="
-        if (action.Contains(",if="))
+        public override bool CanHandle(ActionLine actionLine)
         {
-            // If ",if=" is present, use the original pattern
-            match = Regex.Match(action, @"(?<command>\w+),target_if=(?<targetIfCondition>.*),if=(?<condition>.*)");
-            string targetIfCondition = match.Groups["targetIfCondition"].Value;
-            if (targetIfCondition == "refreshable")
-                additionalCondition = targetIfCondition;
+            return actionLine.SpecialHandling.Contains("target_if=");
         }
-        else
+
+        protected override ActionLine ParseAction(string action)
         {
-            // If ",if=" is not present, use a different pattern that treats everything after "target_if=" as the condition
-            match = Regex.Match(action, @"(?<command>\w+),target_if=(?<condition>.*)");
+            var parsedAction = ActionLineParser.ParseActionLine(action);
 
+            if (parsedAction.SpecialHandling.Contains("target_if="))
+            {
+                var targetIfValue = parsedAction.SpecialHandling.Replace("target_if=", "").Trim();
+                string newCondition = parsedAction.Condition;
+
+                // Handle the targetIfValue as needed
+                // For example, if targetIfValue is "refreshable", you can modify the newCondition.
+                if (targetIfValue == "refreshable")
+                {
+                    newCondition = "refreshable&" + parsedAction.Condition;
+                }
+                // Add more handling logic for other possible values of targetIfValue if needed.
+
+                return new ActionLine(parsedAction.ListName, parsedAction.Action, newCondition, parsedAction.SpecialHandling);
+            }
+
+            return parsedAction;
         }
-        command = match.Groups["command"].Value;
-        if (additionalCondition != "")
-            condition = additionalCondition + "&" + match.Groups["condition"].Value;
-        else
-            condition = match.Groups["condition"].Value;
-
-        return (command, condition);
-    }
 
 
-    protected override bool UseLoopAction(string action)
-    {
-        return !(action.Contains("min:") || action.Contains("max:"));
+        /*protected override bool UseLoopAction(string action)
+        {
+            return !(action.Contains("min:") || action.Contains("max:"));
+        }*/
     }
 }

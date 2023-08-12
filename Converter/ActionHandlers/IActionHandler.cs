@@ -1,8 +1,10 @@
-﻿namespace SimcToBrConverter.ActionHandlers
+﻿using static SimcToBrConverter.ActionLineParser;
+
+namespace SimcToBrConverter.ActionHandlers
 {
     public interface IActionHandler
     {
-        bool CanHandle(string action);
-        string Handle(string listName, string action);
+        bool CanHandle(ActionLine actionLine);
+        string Handle(ActionLine actionLine);
     }
 }

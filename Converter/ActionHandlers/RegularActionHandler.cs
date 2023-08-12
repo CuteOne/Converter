@@ -1,21 +1,20 @@
-﻿using Converter.ActionHandlers;
-using SimcToBrConverter.Conditions;
+﻿using SimcToBrConverter.Conditions;
+using static SimcToBrConverter.ActionLineParser;
 
-public class RegularActionHandler : BaseActionHandler
+namespace SimcToBrConverter.ActionHandlers
 {
-    public RegularActionHandler(List<IConditionConverter> conditionConverters) : base(conditionConverters) { }
-
-    public override bool CanHandle(string action)
+    public class RegularActionHandler : BaseActionHandler
     {
-        return !(action.Contains("target_if=") || action.Contains("use_item"));
-    }
+        public RegularActionHandler(List<IConditionConverter> conditionConverters) : base(conditionConverters) { }
 
-    protected override (string command, string condition) ParseAction(string action)
-    {
-        var parts = action.Split(",if=");
-        var command = parts[0];
-        var condition = parts.Length > 1 ? parts[1] : string.Empty;
+        public override bool CanHandle(ActionLine actionLine)
+        {
+            return !(actionLine.Action.Contains("target_if=") || actionLine.Action.Contains("use_item"));
+        }
 
-        return (command, condition);
+        protected override ActionLine ParseAction(string action)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -1,10 +1,9 @@
-﻿using SimcToBrConverter.ActionHandlers;
-using SimcToBrConverter.Conditions;
-using SimcToBrConverter.Utilities;
+﻿using SimcToBrConverter.Conditions;
 using System.Text;
 using System.Text.RegularExpressions;
+using static SimcToBrConverter.ActionLineParser;
 
-namespace Converter.ActionHandlers
+namespace SimcToBrConverter.ActionHandlers
 {
     public abstract class BaseActionHandler : IActionHandler
     {
@@ -15,33 +14,42 @@ namespace Converter.ActionHandlers
             _conditionConverters = conditionConverters;
         }
 
-        public abstract bool CanHandle(string action);
+        public abstract bool CanHandle(ActionLine action);
 
-        public string Handle(string listName, string action)
+        public string Handle(ActionLine actionLine)
         {
-            var (command, condition) = ParseAction(action);
+            if (string.IsNullOrEmpty(actionLine.Action))
+            {
+                // Handle error scenario here
+                return string.Empty;
+            }
 
-            var (originalCondition, convertedCondition, notConvertedConditions) = ConvertCondition(condition, command);
+            // Parse the action
+            var parsedAction = ParseAction(actionLine.Action);
 
-            return GenerateLuaCode(listName, command, convertedCondition, action, notConvertedConditions, originalCondition);
+            // Convert the condition
+            var (updatedActionLine, notConvertedConditions) = ConvertCondition(parsedAction);
+
+            // Generate the Lua code
+            return LuaCodeGenerator.GenerateActionLineLuaCode(parsedAction, updatedActionLine.Condition, notConvertedConditions);
         }
 
 
-        protected abstract (string command, string condition) ParseAction(string action);
+        protected abstract ActionLine ParseAction(string action);
 
-        protected (string OriginalCondition, string ConvertedCondition, List<string> NotConvertedConditions) ConvertCondition(string condition, string command)
+        protected (ActionLine UpdatedActionLine, List<string> NotConvertedConditions) ConvertCondition(ActionLine parsedAction)
         {
             var notConvertedConditions = new List<string>();
             var convertedConditions = new StringBuilder();
 
             // Check if there are no conditions
-            if (string.IsNullOrWhiteSpace(condition))
+            if (string.IsNullOrWhiteSpace(parsedAction.Condition))
             {
-                return (condition, "", notConvertedConditions);
+                return (parsedAction, notConvertedConditions);
             }
 
             // Split the condition string by the & and | symbols, and parentheses, keeping the delimiters
-            var originalConditions = Regex.Split(condition, @"([&|\(\)!])");
+            var originalConditions = Regex.Split(parsedAction.Condition, @"([&|\(\)!])");
 
             for (int i = 0; i < originalConditions.Length; i++)
             {
@@ -69,7 +77,7 @@ namespace Converter.ActionHandlers
                         {
                             if (converter.CanConvert(trimmedCondition))
                             {
-                                var (convertedPart, notConvertedParts) = converter.Convert(trimmedCondition, command, _conditionConverters);
+                                var (convertedPart, notConvertedParts) = converter.Convert(trimmedCondition, parsedAction.Action, _conditionConverters);
                                 convertedConditions.Append(convertedPart);
                                 notConvertedConditions.AddRange(notConvertedParts);
                                 wasConverted = true;
@@ -85,77 +93,10 @@ namespace Converter.ActionHandlers
                 }
             }
 
-            // Wrap the entire converted conditions in "and ({convertedConditions})"
-            var finalConvertedCondition = $" and ({convertedConditions})";
+            // Create a new ActionLine with the converted condition
+            var updatedAction = new ActionLine(parsedAction.ListName, parsedAction.Action, convertedConditions.ToString());
 
-            return (condition, finalConvertedCondition, notConvertedConditions);
+            return (updatedAction, notConvertedConditions);
         }
-
-
-
-
-        protected virtual bool UseLoopAction(string action)
-        {
-            return false; // Default behavior in the base class
-        }
-
-        protected virtual bool ActionListAction(string action)
-        {
-            return false; // Default behavior in the base class
-        }
-
-
-        protected virtual string GenerateLuaCode(string listName, string command, string convertedCondition, string action, List<string> notConvertedConditions, string originalCondition)
-        {
-            var formattedCommand = StringUtilities.ConvertToCamelCase(command);
-            var debugCommand = StringUtilities.ConvertToTitleCase(command);
-
-            var output = new StringBuilder();
-            output.AppendLine($"    -- {debugCommand}");
-            output.AppendLine($"    -- {action}");
-
-            if (notConvertedConditions.Any(s => !string.IsNullOrEmpty(s)))
-            {
-                output.AppendLine($"    -- TODO: The following conditions were not converted:");
-                foreach (var notConvertedCondition in notConvertedConditions)
-                {
-                    if (!string.IsNullOrEmpty(notConvertedCondition))
-                        output.AppendLine($"    -- {notConvertedCondition}");
-                }
-            }
-
-            if (ActionListAction(action))
-            {
-                var actionListCommand = StringUtilities.ConvertToTitleCaseNoSpace(command);
-                // Check for the specific case
-                if (convertedCondition.StartsWith(" and (") && convertedCondition.EndsWith(")"))
-                {
-                    // Remove the specific parts
-                    convertedCondition = convertedCondition.Replace(" and (", "");
-                    convertedCondition = convertedCondition.Remove(convertedCondition.Length - 1);
-                }
-                output.AppendLine($"    if {convertedCondition} then");
-                output.AppendLine($"        if actionList.{actionListCommand}() then return true end");
-                output.AppendLine("    end");
-            }
-            else if (UseLoopAction(action))
-            {
-                output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
-                output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
-                output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit){convertedCondition} then");
-                output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
-                output.AppendLine("        end");
-                output.AppendLine("    end");
-            }
-            else
-            {
-                output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
-                output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(listName)}]\") return true end");
-                output.AppendLine("    end");
-            }
-
-            return output.ToString();
-        }
-
     }
 }
