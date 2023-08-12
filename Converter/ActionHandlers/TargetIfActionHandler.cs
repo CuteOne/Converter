@@ -1,8 +1,5 @@
-﻿using Converter.ActionHandlers;
-using SimcToBrConverter;
+﻿using SimcToBrConverter.ActionLines;
 using SimcToBrConverter.Conditions;
-using System.Text.RegularExpressions;
-using static SimcToBrConverter.ActionLineParser;
 
 namespace SimcToBrConverter.ActionHandlers
 {
@@ -15,33 +12,21 @@ namespace SimcToBrConverter.ActionHandlers
             return actionLine.SpecialHandling.Contains("target_if=");
         }
 
-        protected override ActionLine ParseAction(string action)
+        protected override ActionLine CheckHandling(ActionLine actionLine)
         {
-            var parsedAction = ActionLineParser.ParseActionLine(action);
+            var targetIfValue = actionLine.SpecialHandling.Replace("target_if=", "").Trim();
+            var modifiedCondition = actionLine.Condition;
 
-            if (parsedAction.SpecialHandling.Contains("target_if="))
+            // Handle the targetIfValue as needed
+            switch (targetIfValue)
             {
-                var targetIfValue = parsedAction.SpecialHandling.Replace("target_if=", "").Trim();
-                string newCondition = parsedAction.Condition;
-
-                // Handle the targetIfValue as needed
-                // For example, if targetIfValue is "refreshable", you can modify the newCondition.
-                if (targetIfValue == "refreshable")
-                {
-                    newCondition = "refreshable&" + parsedAction.Condition;
-                }
-                // Add more handling logic for other possible values of targetIfValue if needed.
-
-                return new ActionLine(parsedAction.ListName, parsedAction.Action, newCondition, parsedAction.SpecialHandling);
+                case "refreshable":
+                    modifiedCondition = "refreshable&" + actionLine.Condition;
+                    break;
+                    // Add more cases as needed.
             }
 
-            return parsedAction;
+            return new ActionLine(actionLine.ListName, actionLine.Action, modifiedCondition, actionLine.SpecialHandling);
         }
-
-
-        /*protected override bool UseLoopAction(string action)
-        {
-            return !(action.Contains("min:") || action.Contains("max:"));
-        }*/
     }
 }

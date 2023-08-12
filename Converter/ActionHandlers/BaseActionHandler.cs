@@ -1,7 +1,7 @@
-﻿using SimcToBrConverter.Conditions;
+﻿using SimcToBrConverter.ActionLines;
+using SimcToBrConverter.Conditions;
 using System.Text;
 using System.Text.RegularExpressions;
-using static SimcToBrConverter.ActionLineParser;
 
 namespace SimcToBrConverter.ActionHandlers
 {
@@ -25,17 +25,17 @@ namespace SimcToBrConverter.ActionHandlers
             }
 
             // Parse the action
-            var parsedAction = ParseAction(actionLine.Action);
+            var handledActionLine = CheckHandling(actionLine);
 
             // Convert the condition
-            var (updatedActionLine, notConvertedConditions) = ConvertCondition(parsedAction);
+            var (updatedActionLine, notConvertedConditions) = ConvertCondition(handledActionLine);
 
             // Generate the Lua code
-            return LuaCodeGenerator.GenerateActionLineLuaCode(parsedAction, updatedActionLine.Condition, notConvertedConditions);
+            return LuaCodeGenerator.GenerateActionLineLuaCode(handledActionLine, updatedActionLine.Condition, notConvertedConditions);
         }
 
 
-        protected abstract ActionLine ParseAction(string action);
+        protected abstract ActionLine CheckHandling(ActionLine actionLine);
 
         protected (ActionLine UpdatedActionLine, List<string> NotConvertedConditions) ConvertCondition(ActionLine parsedAction)
         {
@@ -48,55 +48,28 @@ namespace SimcToBrConverter.ActionHandlers
                 return (parsedAction, notConvertedConditions);
             }
 
-            // Split the condition string by the & and | symbols, and parentheses, keeping the delimiters
-            var originalConditions = Regex.Split(parsedAction.Condition, @"([&|\(\)!])");
+            // Use the utility to split the condition string
+            var originalConditions = ConditionConverterUtility.SplitCondition(parsedAction.Condition);
 
-            for (int i = 0; i < originalConditions.Length; i++)
+            foreach (var conditionPart in originalConditions)
             {
-                var trimmedCondition = originalConditions[i].Trim();
+                var (convertedPart, wasConverted, notConvertedParts) = ConditionConverterUtility.HandleConditionPart(conditionPart, parsedAction, _conditionConverters);
 
-                switch (trimmedCondition)
+                if (wasConverted)
                 {
-                    case "&":
-                        convertedConditions.Append(" and ");
-                        break;
-                    case "|":
-                        convertedConditions.Append(" or ");
-                        break;
-                    case "!":
-                        convertedConditions.Append("not ");
-                        break;
-                    case "(":
-                    case ")":
-                        convertedConditions.Append(trimmedCondition);
-                        break;
-                    default:
-                        var wasConverted = false;
-
-                        foreach (var converter in _conditionConverters)
-                        {
-                            if (converter.CanConvert(trimmedCondition))
-                            {
-                                var (convertedPart, notConvertedParts) = converter.Convert(trimmedCondition, parsedAction.Action, _conditionConverters);
-                                convertedConditions.Append(convertedPart);
-                                notConvertedConditions.AddRange(notConvertedParts);
-                                wasConverted = true;
-                                break;
-                            }
-                        }
-
-                        if (!wasConverted)
-                        {
-                            notConvertedConditions.Add(trimmedCondition);
-                        }
-                        break;
+                    convertedConditions.Append(convertedPart);
+                }
+                else
+                {
+                    notConvertedConditions.AddRange(notConvertedParts);
                 }
             }
 
             // Create a new ActionLine with the converted condition
-            var updatedAction = new ActionLine(parsedAction.ListName, parsedAction.Action, convertedConditions.ToString());
+            var updatedAction = new ActionLine(parsedAction.ListName, parsedAction.Action, parsedAction.SpecialHandling, convertedConditions.ToString());
 
             return (updatedAction, notConvertedConditions);
         }
+
     }
 }

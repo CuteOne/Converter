@@ -1,11 +1,7 @@
 ﻿using SimcToBrConverter.ActionHandlers;
+using SimcToBrConverter.ActionLines;
 using SimcToBrConverter.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using static SimcToBrConverter.ActionLineParser;
 
 namespace SimcToBrConverter
 {
@@ -47,16 +43,6 @@ namespace SimcToBrConverter
             return output.ToString();
         }
 
-        private static bool UseLoopAction(string action)
-        {
-            return false; // Default behavior in the base class
-        }
-
-        private static bool ActionListAction(string action)
-        {
-            return false; // Default behavior in the base class
-        }
-
         internal static string GenerateActionLineLuaCode(ActionLine actionParsed, string convertedCondition, List<string> notConvertedConditions)
         {
             var formattedCommand = StringUtilities.ConvertToCamelCase(actionParsed.Action);
@@ -76,7 +62,10 @@ namespace SimcToBrConverter
                 }
             }
 
-            if (ActionListAction(actionParsed.Action))
+            bool generateActionListAction = actionParsed.Action.Contains("action_list");
+            bool generateLoopAction = !(actionParsed.SpecialHandling.Contains("min:") || actionParsed.SpecialHandling.Contains("max:"));
+
+            if (generateActionListAction)
             {
                 var actionListCommand = StringUtilities.ConvertToTitleCaseNoSpace(actionParsed.Action);
                 // Check for the specific case
@@ -90,7 +79,7 @@ namespace SimcToBrConverter
                 output.AppendLine($"        if actionList.{actionListCommand}() then return true end");
                 output.AppendLine("    end");
             }
-            else if (UseLoopAction(actionParsed.Action))
+            else if (generateLoopAction)
             {
                 output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
                 output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");

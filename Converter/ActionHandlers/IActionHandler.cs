@@ -1,4 +1,4 @@
-﻿using static SimcToBrConverter.ActionLineParser;
+﻿using SimcToBrConverter.ActionLines;
 
 namespace SimcToBrConverter.ActionHandlers
 {

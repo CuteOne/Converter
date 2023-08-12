@@ -1,30 +1,29 @@
-﻿using Converter.ActionHandlers;
+﻿using SimcToBrConverter.ActionHandlers;
+using SimcToBrConverter.ActionLines;
 using SimcToBrConverter.Conditions;
-using System.Text.RegularExpressions;
 
 public class ActionListActionHandler : BaseActionHandler
 {
     public ActionListActionHandler(List<IConditionConverter> conditionConverters) : base(conditionConverters) { }
 
-    public override bool CanHandle(string action)
+    public override bool CanHandle(ActionLine actionLine)
     {
-        return action.Contains("run_action_list") || action.Contains("call_action_list");
+        return actionLine.Action.Contains("run_action_list") || actionLine.Action.Contains("call_action_list");
     }
 
-    protected override (string command, string condition) ParseAction(string action)
+    protected override ActionLine CheckHandling(ActionLine actionLine)
     {
-        /*var parts = action.Split(",if=");
-        var command = parts[0];
-        var condition = parts.Length > 1 ? parts[1] : string.Empty;*/
-        var match = Regex.Match(action, @"(call|run)_action_list,name=(?<command>\w+),if=?(?<condition>.*)");
-        var command = match.Groups["command"].Value;
-        var condition = match.Groups["condition"].Value;
+        if (actionLine.Action.Contains("run_action_list") || actionLine.Action.Contains("call_action_list"))
+        {
+            // Extract the name of the action list from the SpecialHandling property
+            var actionListName = actionLine.SpecialHandling.Replace("name=", "").Trim();
 
-        return (command, condition);
+            // Return a new ActionLine with the extracted action list name as the action
+            return new ActionLine(actionLine.ListName, actionListName, actionLine.SpecialHandling, actionLine.Condition);
+        }
+
+        // If the action doesn't match the expected patterns, return the original ActionLine
+        return actionLine;
     }
 
-    protected override bool ActionListAction(string action)
-    {
-        return action.Contains("run_action_list") || action.Contains("call_action_list");
-    }
 }

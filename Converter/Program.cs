@@ -1,6 +1,6 @@
 ﻿using SimcToBrConverter.ActionHandlers;
+using SimcToBrConverter.ActionLines;
 using SimcToBrConverter.Conditions;
-using static SimcToBrConverter.ActionLineParser;
 
 namespace SimcToBrConverter
 {
@@ -78,9 +78,7 @@ namespace SimcToBrConverter
             return new List<IActionHandler>
             {
                 new ActionListActionHandler(conditionConverters),
-                new RegularActionHandler(conditionConverters),
-                new TargetIfActionHandler(conditionConverters),
-                new UseItemActionHandler(conditionConverters)
+                new TargetIfActionHandler(conditionConverters)
             };
         }
 
@@ -97,8 +95,15 @@ namespace SimcToBrConverter
             {
                 if (line.StartsWith("actions"))
                 {
-                    var actionParsed = ActionLineParser.ParseActionLine(line);
-                    actionLines.Add(actionParsed);
+                    var result = ActionLineParser.ParseActionLine(line);
+                    if (result is ActionLine singleResult)
+                    {
+                        actionLines.Add(singleResult);
+                    }
+                    else if (result is MultipleActionLineResult multipleResult)
+                    {
+                        actionLines.AddRange(multipleResult.ActionLines);
+                    }
                 }
             }
 
