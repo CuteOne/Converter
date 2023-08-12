@@ -1,10 +1,22 @@
 ﻿namespace SimcToBrConverter.Conditions
 {
+    /// <summary>
+    /// Handles the conversion of conditions related to the number of targets a spell will hit.
+    /// </summary>
     public class SpellTargetsConditionConverter : BaseConditionConverter
     {
-        // Override the ConditionPrefix property to specify the correct prefix
+        /// <summary>
+        /// Specifies the prefix for conditions this converter can handle.
+        /// </summary>
         protected override string ConditionPrefix => "spell_targets.";
 
+        /// <summary>
+        /// Converts the given task related to a spell into its corresponding representation.
+        /// </summary>
+        /// <param name="spell">The spell associated with the task.</param>
+        /// <param name="task">The task to convert.</param>
+        /// <param name="command">The action command.</param>
+        /// <returns>A tuple containing the converted task, a flag indicating if negation is needed, and a flag indicating if the conversion was successful.</returns>
         public override (string Result, bool Negate, bool Converted) ConvertTask(string spell, string task, string command)
         {
             string result;

@@ -5,96 +5,90 @@ namespace SimcToBrConverter.Conditions
 {
     public abstract class BaseConditionConverter : IConditionConverter
     {
-        // Virtual property that derived classes can override to specify the prefix
+        // Virtual property that derived classes can override to specify the prefix for conditions they handle.
         protected virtual string ConditionPrefix => "";
 
-        // Virtual method that derived classes can override if they need custom logic
-        public virtual bool CanConvert(string condition)
+        // Determines if the converter can handle the given condition based on its prefix.
+        public virtual string? CanConvert(string condition)
         {
-            return condition.StartsWith(ConditionPrefix);
+            return condition.StartsWith(ConditionPrefix) ? ConditionPrefix : null;
         }
 
-        private static readonly HashSet<string> TaskConditionTypes = new HashSet<string>
+        // Checks if the given part is either a comparison operator or a number.
+        private bool IsComparisonOrNumber(string part, out string result)
         {
-            "target" // Add other condition types that consider the second part as a task
-        };
+            if (Regex.IsMatch(part, @"^[<>=]+$") || double.TryParse(part, out _))
+            {
+                result = part;
+                return true;
+            }
+            result = string.Empty;
+            return false;
+        }
 
-
-        public (string ConvertedCondition, List<string> NotConvertedParts) Convert(string condition, string command, List<IConditionConverter> conditionConverters)
+        // Splits the condition part into its constituent components: conditionType, spell, and task.
+        private (string ConditionType, string Spell, string Task) SplitConditionPart(string part)
         {
-            var formattedCommand = StringUtilities.ConvertToCamelCase(command);
+            var subparts = part.Split('.');
+            var conditionType = subparts[0];
+            var spell = subparts.Length > 1 ? subparts[1] : string.Empty;
+            var task = subparts.Length > 2 ? subparts[2] : string.Empty;
+            return (conditionType, spell, task);
+        }
 
-            // Split the condition into parts based on comparison operators
-            var parts = Regex.Split(condition, @"([<>=]+)");
+        // Converts the given condition part using the appropriate condition converter.
+        public (string ConvertedConditionPart, List<string> NotConvertedParts) Convert(string conditionPart, string action, List<IConditionConverter> conditionConverters)
+        {
+            var formattedCommand = StringUtilities.ConvertToCamelCase(action);
             var convertedParts = new List<string>();
             var notConvertedParts = new List<string>();
+
+            // Check if the condition is empty
+            if (string.IsNullOrWhiteSpace(conditionPart))
+            {
+                return (string.Empty, notConvertedParts);
+            }
+
+            // Split the condition into parts based on comparison operators
+            var parts = Regex.Split(conditionPart, @"([<>=]+)");
+
+            // Create a lookup for the converters
+            var converterLookup = conditionConverters
+                .Select(converter => new { Key = converter.CanConvert(conditionPart), Converter = converter })
+                .Where(item => item.Key != null)
+                .ToDictionary(item => item.Key!, item => item.Converter);
+
 
             // Convert each part separately
             foreach (var part in parts)
             {
                 if (part.Length == 0) continue;
 
-                // Check if the part is a comparison operator
-                if (Regex.IsMatch(part, @"^[<>=]+$"))
+                if (IsComparisonOrNumber(part, out var result))
                 {
-                    convertedParts.Add(part);
-                }
-                // Check if the part is a number
-                else if (double.TryParse(part, out _))
-                {
-                    convertedParts.Add(part);
+                    convertedParts.Add(result);
                 }
                 else
                 {
-                    // Split the part into conditionType, spell, and task
-                    var subparts = part.Split('.');
-                    var conditionType = subparts[0];
-                    var isTask = TaskConditionTypes.Contains(conditionType);
-                    var spell = "";
-                    var task = "";
+                    var (conditionType, spell, task) = SplitConditionPart(part);
+                    string convertedPart;
+                    bool negate;
+                    bool converted;
 
-                    // Handle different formats
-                    if (subparts.Length == 1)
+                    // Use the lookup to find the appropriate condition converter
+                    if (converterLookup.TryGetValue(part, out var converter))
                     {
-                        task = conditionType;
-                        conditionType = ""; // Reset conditionType if it's actually a task
-                    }
-                    else if (subparts.Length == 2)
-                    {
-                        if (isTask)
+                        (convertedPart, negate, converted) = converter.ConvertTask(spell, task, formattedCommand);
+                        if (negate)
                         {
-                            task = subparts[1];
+                            convertedPart = $"not {convertedPart}";
                         }
-                        else
+                        convertedParts.Add(convertedPart);
+                        if (!converted)
                         {
-                            spell = StringUtilities.ConvertToCamelCase(subparts[1]);
+                            notConvertedParts.Add(part);
                         }
                     }
-                    else if (subparts.Length > 2)
-                    {
-                        spell = StringUtilities.ConvertToCamelCase(subparts[1]);
-                        task = subparts[2];
-                    }
-
-                    // Convert the part using the appropriate condition converter
-                    string result = "";
-                    bool negate = false;
-                    bool converted = true;
-                    foreach (var converter in conditionConverters)
-                    {
-                        if (converter.CanConvert(part))
-                        {
-                            (result, negate, converted) = converter.ConvertTask(spell, task, formattedCommand);
-                            break;
-                        }
-                    }
-                    if (!converted)
-                        notConvertedParts.Add(part);
-                    if (negate) // XOR to combine the two negation flags
-                    {
-                        result = $"not {result}";
-                    }
-                    convertedParts.Add(result);
                 }
             }
 
@@ -103,6 +97,8 @@ namespace SimcToBrConverter.Conditions
             return (finalResult, notConvertedParts);
         }
 
+
+        // Abstract method that derived classes must implement to specify how to convert a task.
         public abstract (string Result, bool Negate, bool Converted) ConvertTask(string spell, string task, string command);
     }
 }
