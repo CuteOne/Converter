@@ -7,50 +7,57 @@ namespace SimcToBrConverter
 {
     public class LuaCodeGenerator
     {
+        private static string? lastListName = null; // Static variable to keep track of the last ListName
+
         /// <summary>
         /// Generates Action Lists and places generated lua code for actions that match the Action List name within. 
         /// </summary>
         /// <param name="actionLine">The action line to convert.</param>
         /// <param name="actionHandlers">A list of action handlers to use for conversion.</param>
         /// <returns>The generated Lua code as a string.</returns>
-        internal static string GenerateActionListLuaCode(ActionLine actionLine, List<IActionHandler> actionHandlers)
+        internal static string GenerateActionListLuaCode(ActionLine actionLine, List<IActionHandler> actionHandlers, ConditionConversionService conditionConversionService)
         {
             StringBuilder output = new StringBuilder();
 
-            if (!string.IsNullOrEmpty(actionLine.ListName))
-            {
-                output.AppendLine($"actionList.{StringUtilities.ConvertToTitleCaseNoSpace(actionLine.ListName)} = function()");
-            }
-
             // Convert the action using the appropriate handler
-            var applicableHandlers = actionHandlers.Where(h => h.CanHandle(actionLine)).ToList();
-            foreach (var handler in applicableHandlers)
-            {
-                string convertedAction = handler.Handle(actionLine);
-                if (!string.IsNullOrEmpty(convertedAction))
-                {
-                    output.Append(convertedAction);
-                    break;
-                }
-            }
+            var handledActionLine = actionHandlers.FirstOrDefault(h => h.CanHandle(actionLine))?.Handle(actionLine);
 
-            if (!string.IsNullOrEmpty(actionLine.ListName))
+            if (handledActionLine == null)
+            {
+                return string.Empty;
+            }
+            
+            // Convert the condition
+            var (updatedActionLine, notConvertedConditions) = conditionConversionService.ConvertCondition((ActionLine)handledActionLine);
+
+
+            if (updatedActionLine.ListName != lastListName && !string.IsNullOrEmpty(updatedActionLine.ListName))
             {
                 output.AppendLine("end");
                 output.AppendLine();
             }
 
+            // Check if actionLine.ListName is not empty/null and has changed
+            if (!string.IsNullOrEmpty(updatedActionLine.ListName) && updatedActionLine.ListName != lastListName)
+            {
+                output.AppendLine($"actionList.{StringUtilities.ConvertToTitleCaseNoSpace(updatedActionLine.ListName)} = function()");
+                lastListName = updatedActionLine.ListName; // Update the lastListName
+            }
+
+            // Generate the Lua code for the action
+            output.Append(GenerateActionLineLuaCode(updatedActionLine, notConvertedConditions));
+
             return output.ToString();
         }
 
-        internal static string GenerateActionLineLuaCode(ActionLine actionParsed, string convertedCondition, List<string> notConvertedConditions)
+        internal static string GenerateActionLineLuaCode(ActionLine actionLine, List<string> notConvertedConditions)
         {
-            var formattedCommand = StringUtilities.ConvertToCamelCase(actionParsed.Action);
-            var debugCommand = StringUtilities.ConvertToTitleCase(actionParsed.Action);
+            var formattedCommand = StringUtilities.ConvertToCamelCase(actionLine.Action);
+            var debugCommand = StringUtilities.ConvertToTitleCase(actionLine.Action);
 
             var output = new StringBuilder();
             output.AppendLine($"    -- {debugCommand}");
-            output.AppendLine($"    -- {actionParsed.Action}");
+            output.AppendLine($"    -- {actionLine.Comment}");
 
             if (notConvertedConditions.Any(s => !string.IsNullOrEmpty(s)))
             {
@@ -62,21 +69,19 @@ namespace SimcToBrConverter
                 }
             }
 
-            bool generateActionListAction = actionParsed.Action.Contains("action_list");
-            bool generateLoopAction = !(actionParsed.SpecialHandling.Contains("min:") || actionParsed.SpecialHandling.Contains("max:"));
+            bool generateActionListAction = actionLine.Action.Contains("action_list");
+            bool generateLoopAction = actionLine.SpecialHandling.Contains("target_if") && !(actionLine.SpecialHandling.Contains("min:") || actionLine.SpecialHandling.Contains("max:"));
+            string convertedCondition = StringUtilities.CheckForOr(actionLine.Condition);
+            if (!string.IsNullOrEmpty(convertedCondition))
+                convertedCondition = " and " + convertedCondition;
+            string listNameTag = "";
+            if (!string.IsNullOrEmpty(actionLine.ListName))
+                listNameTag = $" [{StringUtilities.ConvertToTitleCase(actionLine.ListName)}]";
 
             if (generateActionListAction)
             {
-                var actionListCommand = StringUtilities.ConvertToTitleCaseNoSpace(actionParsed.Action);
-                // Check for the specific case
-                if (convertedCondition.StartsWith(" and (") && convertedCondition.EndsWith(")"))
-                {
-                    // Remove the specific parts
-                    convertedCondition = convertedCondition.Replace(" and (", "");
-                    convertedCondition = convertedCondition.Remove(convertedCondition.Length - 1);
-                }
-                output.AppendLine($"    if {convertedCondition} then");
-                output.AppendLine($"        if actionList.{actionListCommand}() then return true end");
+                output.AppendLine($"    if {actionLine.Condition} then");
+                output.AppendLine($"        if actionList.{StringUtilities.ConvertToTitleCaseNoSpace(actionLine.Action)}() then return true end");
                 output.AppendLine("    end");
             }
             else if (generateLoopAction)
@@ -84,14 +89,14 @@ namespace SimcToBrConverter
                 output.AppendLine($"    for i = 1, #enemies.PLACEHOLDER_RANGE do");
                 output.AppendLine($"        local thisUnit = enemies.PLACEHOLDER_RANGE[i]");
                 output.AppendLine($"        if cast.able.{formattedCommand}(thisUnit){convertedCondition} then");
-                output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(actionParsed.ListName)}]\") return true end");
+                output.AppendLine($"            if cast.{formattedCommand}(thisUnit) then ui.debug(\"Casting {debugCommand}{listNameTag}\") return true end");
                 output.AppendLine("        end");
                 output.AppendLine("    end");
             }
             else
             {
                 output.AppendLine($"    if cast.able.{formattedCommand}(){convertedCondition} then");
-                output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand} [{StringUtilities.ConvertToTitleCase(actionParsed.ListName)}]\") return true end");
+                output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand}{listNameTag}\") return true end");
                 output.AppendLine("    end");
             }
 
@@ -103,7 +108,7 @@ namespace SimcToBrConverter
         /// </summary>
         /// <param name="actionLines">The list of action lines to convert.</param>
         /// <param name="actionHandlers">A list of action handlers to use for conversion.</param>
-        internal static void GenerateLuaCode(List<ActionLine> actionLines, List<IActionHandler> actionHandlers)
+        internal static void GenerateLuaCode(List<ActionLine> actionLines, List<IActionHandler> actionHandlers, ConditionConversionService conditionConversionService)
         {
             StringBuilder output = new StringBuilder();
 
@@ -121,8 +126,10 @@ namespace SimcToBrConverter
             // Handle Action Lists
             foreach (var actionLine in actionLines)
             {
-                output.Append(GenerateActionListLuaCode(actionLine, actionHandlers));
+                output.Append(GenerateActionListLuaCode(actionLine, actionHandlers, conditionConversionService));
             }
+            output.AppendLine("end");
+            output.AppendLine();
 
             output.AppendLine("function br.rotations.profile()");
             output.AppendLine();
@@ -143,9 +150,11 @@ namespace SimcToBrConverter
                 var applicableHandlers = actionHandlers.Where(h => h.CanHandle(actionLine)).ToList();
                 foreach (var handler in applicableHandlers)
                 {
-                    string convertedAction = handler.Handle(actionLine);
-                    if (!string.IsNullOrEmpty(convertedAction))
+                    ActionLine handledAction = handler.Handle(actionLine);
+                    if (handledAction.Action != null)
                     {
+                        var (updatedActionLine, notConvertedConditions) = conditionConversionService.ConvertCondition(handledAction);
+                        string convertedAction = GenerateActionLineLuaCode(updatedActionLine, notConvertedConditions);
                         output.Append(convertedAction);
                         break;
                     }

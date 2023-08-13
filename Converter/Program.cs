@@ -13,14 +13,15 @@ namespace SimcToBrConverter
             // Download the SimulationCraft profile
             string profile = await DownloadProfile(PROFILE_URL);
 
-            var actionParsed = ParseActions(profile.Split('\n'));
+            var actionLines = ParseActions(profile.Split('\n'));
 
             // Define the condition converters and action handlers
             var conditionConverters = GetConditionConverters();
-            var actionHandlers = GetActionHandlers(conditionConverters);
+            var actionHandlers = GetActionHandlers();
+            var conditionConversionService = new ConditionConversionService(conditionConverters);
 
             // Generate and print the Lua code
-            LuaCodeGenerator.GenerateLuaCode(actionParsed, actionHandlers);
+            LuaCodeGenerator.GenerateLuaCode(actionLines, actionHandlers, conditionConversionService);
 
             // Print the Lua code
             //Console.WriteLine(luaCode);
@@ -73,12 +74,14 @@ namespace SimcToBrConverter
         /// </summary>
         /// <param name="conditionConverters">A list of condition converters to be used by the action handlers.</param>
         /// <returns>A list of action handlers.</returns>
-        private static List<IActionHandler> GetActionHandlers(List<IConditionConverter> conditionConverters)
+        private static List<IActionHandler> GetActionHandlers()
         {
             return new List<IActionHandler>
             {
-                new ActionListActionHandler(conditionConverters),
-                new TargetIfActionHandler(conditionConverters)
+                new ActionListActionHandler(),
+                new TargetIfActionHandler(),
+                // DefaultActionHandler should always be the last in the list to ensure it acts as a fallback.
+                new DefaultActionHandler()
             };
         }
 

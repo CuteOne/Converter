@@ -4,7 +4,7 @@ using SimcToBrConverter.Conditions;
 
 public class ActionListActionHandler : BaseActionHandler
 {
-    public ActionListActionHandler(List<IConditionConverter> conditionConverters) : base(conditionConverters) { }
+    public ActionListActionHandler() : base() { }
 
     public override bool CanHandle(ActionLine actionLine)
     {
@@ -17,9 +17,10 @@ public class ActionListActionHandler : BaseActionHandler
         {
             // Extract the name of the action list from the SpecialHandling property
             var actionListName = actionLine.SpecialHandling.Replace("name=", "").Trim();
+            actionLine.Action = actionListName;
 
             // Return a new ActionLine with the extracted action list name as the action
-            return new ActionLine(actionLine.ListName, actionListName, actionLine.SpecialHandling, actionLine.Condition);
+            return actionLine;
         }
 
         // If the action doesn't match the expected patterns, return the original ActionLine
