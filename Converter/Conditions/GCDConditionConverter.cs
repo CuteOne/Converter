@@ -15,11 +15,16 @@
         /// <param name="task">The specific task or condition to check.</param>
         /// <param name="command">The action command associated with the condition.</param>
         /// <returns>A tuple containing the converted condition, whether to negate the result, and whether the conversion was successful.</returns>
-        public override (string Result, bool Negate, bool Converted) ConvertTask(string spell, string task, string command)
+        public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command)
         {
             string result;
             bool negate = false;
             bool converted = true;
+            if (string.IsNullOrEmpty(task))
+            {
+                task = spell;
+                spell = command;
+            }
             switch (task)
             {
                 case "remains":

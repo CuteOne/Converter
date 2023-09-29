@@ -20,8 +20,10 @@ namespace SimcToBrConverter.Conditions
             var conditionType = subparts[0];
             var spell = subparts.Length > 1 ? subparts[1] : string.Empty;
             var task = subparts.Length > 2 ? subparts[2] : string.Empty;
-            if (string.IsNullOrEmpty(spell) && string.IsNullOrEmpty(task))
-                task = conditionType;
+            //if (string.IsNullOrEmpty(spell) && string.IsNullOrEmpty(task))
+            //    task = conditionType;
+            //if (string.IsNullOrEmpty(task) && !string.IsNullOrEmpty(spell))
+            //    task = spell;
             return (conditionType, spell, task);
         }
 
@@ -41,7 +43,7 @@ namespace SimcToBrConverter.Conditions
             // Convert the spell to camelCase
             spell = StringUtilities.ConvertToCamelCase(spell);
 
-            var (convertedPart, negate, converted) = ConvertTask(spell, task, formattedCommand);
+            var (convertedPart, negate, converted) = ConvertTask(conditionType, spell, task, formattedCommand);
 
             if (negate)
             {
@@ -57,6 +59,6 @@ namespace SimcToBrConverter.Conditions
         }
 
         // Abstract method that derived classes must implement to specify how to convert a task.
-        public abstract (string Result, bool Negate, bool Converted) ConvertTask(string spell, string task, string command);
+        public abstract (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command);
     }
 }

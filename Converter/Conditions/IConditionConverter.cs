@@ -11,6 +11,6 @@ namespace SimcToBrConverter.Conditions
         (string ConvertedConditionPart, List<string> NotConvertedParts) ConvertPart(string conditionPart, string action);
 
         // Convert specific tasks related to conditions
-        (string Result, bool Negate, bool Converted) ConvertTask(string spell, string task, string command);
+        (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command);
     }
 }

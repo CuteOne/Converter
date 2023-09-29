@@ -1,14 +1,35 @@
 ﻿using SimcToBrConverter.ActionLines;
 using SimcToBrConverter.Conditions;
+using SimcToBrConverter.Utilities;
 using System.Text;
 
 public class ConditionConversionService
 {
     private readonly List<IConditionConverter> _conditionConverters;
+    public HashSet<string> Locals { get; private set; } = new HashSet<string>();
 
     public ConditionConversionService(List<IConditionConverter> conditionConverters)
     {
         _conditionConverters = conditionConverters;
+    }
+    private void AddToLocalList(string local)
+    {
+        // Remove the "not " prefix
+        if (local.StartsWith("not "))
+        {
+            local = local.Substring(4);
+        }
+
+        // Remove any # characters
+        local = local.Replace("#", "");
+
+        // Trim whitespace
+        local = local.Trim();
+
+        if (!string.IsNullOrWhiteSpace(local))
+        {
+            Locals.Add(local);
+        }
     }
 
     public (ActionLine UpdatedActionLine, List<string> NotConvertedConditions) ConvertCondition(ActionLine actionLine)
@@ -35,6 +56,8 @@ public class ConditionConversionService
                 if (converter.CanConvert(conditionPart) != null)
                 {
                     var (convertedPart, notConvertedParts) = converter.ConvertPart(conditionPart, actionLine.Action);
+                    var local = convertedPart.Split('.')[0];
+                    AddToLocalList(local);
                     convertedConditions.Append(convertedPart);
                     notConvertedConditions.AddRange(notConvertedParts);
                     wasConverted = true;
@@ -49,7 +72,9 @@ public class ConditionConversionService
         }
 
         // Convert logical operators to their Lua equivalents
-        var finalConvertedCondition = ConditionConverterUtility.ConvertLogicalOperatorsToLua(convertedConditions.ToString());
+        string checkConditions = StringUtilities.CheckForOr(convertedConditions.ToString());
+        var finalConvertedCondition = ConditionConverterUtility.ConvertLogicalOperatorsToLua(checkConditions);
+        //var finalConvertedCondition = ConditionConverterUtility.ConvertLogicalOperatorsToLua(convertedConditions.ToString());
         actionLine.Condition = finalConvertedCondition;
 
         return (actionLine, notConvertedConditions);

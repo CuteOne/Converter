@@ -19,7 +19,10 @@ namespace SimcToBrConverter.ActionHandlers
             var modifiedCondition = actionLine.Condition;
             if (!targetIfValue.Contains("max:") && !targetIfValue.Contains("min:"))
             {
-                modifiedCondition = StringUtilities.CheckForOr(targetIfValue) + "&" + StringUtilities.CheckForOr(actionLine.Condition);
+                if (!string.IsNullOrEmpty(actionLine.Condition))
+                    modifiedCondition = StringUtilities.CheckForOr(targetIfValue) + "&" + StringUtilities.CheckForOr(actionLine.Condition);
+                else
+                    modifiedCondition = StringUtilities.CheckForOr(targetIfValue);
             }
             actionLine.Condition = modifiedCondition;
 

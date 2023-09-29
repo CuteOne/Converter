@@ -27,15 +27,22 @@ namespace SimcToBrConverter.Utilities
 
         public static string CheckForOr(string input)
         {
-            if (input.Contains("|"))
+            if (input.Contains("|") || input.Contains(" or "))
             {
-                int indexOfPipe = input.IndexOf("|");
-                bool hasOpeningParenthesisBeforePipe = input.Substring(0, indexOfPipe).Contains("(");
-                bool hasClosingParenthesisAfterPipe = input.Substring(indexOfPipe).Contains(")");
-
-                if (!hasOpeningParenthesisBeforePipe || !hasClosingParenthesisAfterPipe)
+                int indexOfPipe = -1;
+                if (input.Contains("|"))
+                    indexOfPipe = input.IndexOf("|");
+                if (input.Contains(" or "))
+                    indexOfPipe = input.IndexOf(" or ");
+                if (indexOfPipe > -1)
                 {
-                    input = $"({input})";
+                    //bool hasOpeningParenthesisBeforePipe = input.Substring(0, indexOfPipe).Contains("(");
+                    //bool hasClosingParenthesisAfterPipe = input.Substring(indexOfPipe).Contains(")");
+
+                    //if (!hasOpeningParenthesisBeforePipe || !hasClosingParenthesisAfterPipe)
+                    //{
+                        input = $"({input})";
+                    //}
                 }
             }
 

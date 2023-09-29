@@ -39,25 +39,5 @@ namespace SimcToBrConverter.Conditions
             return new[] { "&", "|", "(", ")", "!", "<=", ">=", "<", ">", "=", "!=", "+", "-", "*", "/" }.Contains(conditionPart)
                    || double.TryParse(conditionPart, out _);
         }
-
-        /// <summary>
-        /// Handles the conversion of an individual condition part.
-        /// </summary>
-        /// <param name="conditionPart">The condition part to convert.</param>
-        /// <param name="actionCommand">The action command associated with the condition.</param>
-        /// <param name="conditionConverters">The list of available condition converters.</param>
-        /// <returns>A tuple containing the converted condition part, a flag indicating if the conversion was successful, and a list of not converted parts.</returns>
-        public static (string ConvertedPart, bool WasConverted, List<string> NotConvertedParts)
-            HandleConditionPart(string conditionPart, ActionLine actionLine, IConditionConverter converter)
-        {
-            var conditionPrefix = converter.CanConvert(conditionPart);
-            if (!string.IsNullOrEmpty(conditionPrefix))
-            {
-                var (convertedPart, notConvertedParts) = converter.ConvertPart(conditionPart, actionLine.Action);
-                return (convertedPart, true, notConvertedParts);
-            }
-            return (conditionPart, false, DefaultNotConverted);
-        }
-
     }
 }
