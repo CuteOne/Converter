@@ -17,7 +17,7 @@
         /// <param name="task">The task to convert.</param>
         /// <param name="command">The action command.</param>
         /// <returns>A tuple containing the converted task, a flag indicating if negation is needed, and a flag indicating if the conversion was successful.</returns>
-        public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command)
+        public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command, string op)
         {
             string result;
             bool negate = false;

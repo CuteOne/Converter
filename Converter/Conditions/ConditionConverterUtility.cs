@@ -6,11 +6,11 @@ namespace SimcToBrConverter.Conditions
 {
     public static class ConditionConverterUtility
     {
-        private static readonly List<string> DefaultNotConverted = new List<string>();
-        private static readonly Regex SplitConditionRegex = new Regex(@"([&|\(\)!]|<=|>=|<|>|=|!=|\+|\-|\*|/|%%|%|@|<\?|>\?|\b\d+\b)", RegexOptions.Compiled);
-        private static readonly Regex ModulusRegex = new Regex(@"(?<!%)%%", RegexOptions.Compiled);
-        private static readonly Regex XorRegex = new Regex(@"(?<=\b|\s|\()(?<x>[^&|^|^\!]+)\^(?<y>[^&|^|^\!]+)(?=\b|\s|\))", RegexOptions.Compiled);
-        private static readonly Regex EqualityRegex = new Regex(@"(?<![\!=<>])=(?![\!=<>])", RegexOptions.Compiled);
+        //private static readonly Regex SplitConditionRegex = new(@"([&|\(\)!]|<=|>=|<|>|=|!=|\+|\-|\*|/|%%|%|@|<\?|>\?|\b\d+\b)", RegexOptions.Compiled);
+        private static readonly Regex SplitConditionRegex = new(@"([&|\(\)!]|<=|>=|<|>|=|!=|\+|\-|\*|/|%%|%|@|<\?|>\?|(?<!\.\d*)\b\d+\b(?!\.\d*))", RegexOptions.Compiled);
+        private static readonly Regex ModulusRegex = new(@"(?<!%)%%", RegexOptions.Compiled);
+        private static readonly Regex XorRegex = new(@"(?<=\b|\s|\()(?<x>[^&|^|^\!]+)\^(?<y>[^&|^|^\!]+)(?=\b|\s|\))", RegexOptions.Compiled);
+        private static readonly Regex EqualityRegex = new(@"(?<![\!=<>])=(?![\!=<>])", RegexOptions.Compiled);
 
         /// <summary>
         /// Splits the provided condition string by the & and | symbols, and parentheses, keeping the delimiters.
@@ -31,8 +31,6 @@ namespace SimcToBrConverter.Conditions
 
         public static string ConvertOperatorsToLua(string condition)
         {
-            if (condition.Contains("%%"))
-                condition = condition;
             var builder = new StringBuilder(condition);
             ConvertLogicalOperatorsToLua(builder);
             ConvertArithmeticOperatorsToLua(builder);

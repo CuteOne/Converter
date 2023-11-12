@@ -4,10 +4,10 @@ namespace SimcToBrConverter.ActionLines
 {
     public class ActionLineParser
     {
-        private static readonly Regex ActionPattern = new Regex(
+        private static readonly Regex ActionPattern = new(
             @"^actions\.?(?<listName>\w+)?(\+=/|=)(?<action>[^,]+)(?:(?!,if=|,value=|,op=),(?<specialHandling>[^,]+(?:,[^,]+)*?)(?=(?:,if=|,value=|,op=|$)))?(?:,(?:if=|value=|op=)(?<condition>.+))?$",
             RegexOptions.Compiled);
-        private static readonly Regex CommentPattern = new Regex(
+        private static readonly Regex CommentPattern = new(
             @"^actions\.?(?:\w+)?(?:(?=\+=/)|(?==))(?:\+=/|=)(?<comment>.+)$",
             RegexOptions.Compiled);
 
@@ -27,9 +27,9 @@ namespace SimcToBrConverter.ActionLines
             if (string.IsNullOrEmpty(action))
                 throw new InvalidOperationException($"Failed to group the action from the line: {line}");
 
-            if (specialHandling.Contains("name="))
+            if (!action.Contains("use_item") && !action.Contains("variable") && specialHandling.Contains("name="))
             {
-                if (specialHandling.Contains("|"))
+                if (specialHandling.Contains('|'))
                 {
                     // Handle the special case with multiple name= values
                     var names = specialHandling.Split('|');
@@ -40,7 +40,7 @@ namespace SimcToBrConverter.ActionLines
                         if (name.Contains("name="))
                         {
                             match = Regex.Match(name, @"name=(?<command>\w+)");
-                            itemName = match.Groups["command"].Value;
+                            itemName = $"{action}.{match.Groups["command"].Value}";
                         }
                         else
                         {
@@ -53,7 +53,7 @@ namespace SimcToBrConverter.ActionLines
                 else
                 {
                     match = Regex.Match(specialHandling, @"name=(?<command>\w+)");
-                    action = match.Groups["command"].Value;
+                    action = $"{action}.{match.Groups["command"].Value}";
                     specialHandling = specialHandling.Replace($"name={action}", "").Trim(',');
                 }
             }

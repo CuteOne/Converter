@@ -17,7 +17,7 @@
             };
         }
 
-        public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command)
+        public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command, string op)
         {
             string result;
             bool negate = false;

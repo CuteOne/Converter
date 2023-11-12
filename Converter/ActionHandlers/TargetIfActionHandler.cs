@@ -1,5 +1,4 @@
 ﻿using SimcToBrConverter.ActionLines;
-using SimcToBrConverter.Conditions;
 using SimcToBrConverter.Utilities;
 
 namespace SimcToBrConverter.ActionHandlers
@@ -15,7 +14,7 @@ namespace SimcToBrConverter.ActionHandlers
 
         protected override ActionLine CheckHandling(ActionLine actionLine)
         {
-            var targetIfValue = actionLine.SpecialHandling.Substring("target_if=".Length).Trim();
+            var targetIfValue = actionLine.SpecialHandling["target_if=".Length..].Trim();
             var modifiedCondition = actionLine.Condition;
             if (!targetIfValue.Contains("max:") && !targetIfValue.Contains("min:"))
             {

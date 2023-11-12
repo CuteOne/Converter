@@ -13,12 +13,13 @@
             {
                 string s when s.StartsWith("set_bonus") => "set_bonus",
                 string s when s.StartsWith("equipped") => "equipped",
-                // Add other power-related conditions as needed
+                string s when s.StartsWith("trinket") => "trinket",
+                // Add other item-related conditions as needed
                 _ => null
             };
         }
 
-        public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command)
+        public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command, string op)
         {
             string result;
             bool negate = false;
@@ -29,13 +30,23 @@
             }
             if (conditionType == "equipped")
             {
+                op = task;
+                if (!string.IsNullOrEmpty(op))
+                {
+                    // Add 12 to the slot number to convert from SimC Trinket Slot ID to WoW Trinket Slot ID
+                    op = (int.Parse(op) + 12).ToString();
+                }
                 task = conditionType;
             }
+            //if (conditionType == "trinket")
+            //{
+            //    task = conditionType;
+            //}
 
             switch (task)
             {
                 case "equipped":
-                    result = $"equiped.{spell}()";
+                    result = $"equiped.{spell}({op})";
                     break;
                 case "tier304Pc":
                     result = $"equiped.tier(30) >= 4";

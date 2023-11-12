@@ -6,9 +6,9 @@ namespace SimcToBrConverter
 {
     class Program
     {
-        private const string PROFILE_URL = "https://raw.githubusercontent.com/simulationcraft/simc/dragonflight/profiles/Tier30/T30_Druid_Feral.simc";
+        private const string PROFILE_URL = "https://raw.githubusercontent.com/simulationcraft/simc/dragonflight/profiles/Tier31/T31_Druid_Feral.simc";
 
-        static async Task Main(string[] args)
+        static async Task Main()
         {
             // Download the SimulationCraft profile
             string profile = await DownloadProfile(PROFILE_URL);
@@ -36,10 +36,8 @@ namespace SimcToBrConverter
         {
             try
             {
-                using (HttpClient client = new HttpClient())
-                {
-                    return await client.GetStringAsync(url);
-                }
+                using HttpClient client = new();
+                return await client.GetStringAsync(url);
             }
             catch (HttpRequestException e)
             {
@@ -81,7 +79,10 @@ namespace SimcToBrConverter
             return new List<IActionHandler>
             {
                 new ActionListActionHandler(),
+                new PoolAndWaitActionHandler(),
                 new TargetIfActionHandler(),
+                new UseItemActionHandler(),
+                new VariableActionHandler(),
                 // DefaultActionHandler should always be the last in the list to ensure it acts as a fallback.
                 new DefaultActionHandler()
             };
@@ -94,7 +95,7 @@ namespace SimcToBrConverter
         /// <returns>A list of parsed action lines.</returns>
         private static List<ActionLine> ParseActions(string[] profileLines)
         {
-            List<ActionLine> actionLines = new List<ActionLine>();
+            List<ActionLine> actionLines = new();
 
             foreach (var line in profileLines)
             {
