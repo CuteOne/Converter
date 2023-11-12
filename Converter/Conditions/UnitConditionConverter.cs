@@ -6,9 +6,23 @@
     public class UnitConditionConverter : BaseConditionConverter
     {
         /// <summary>
-        /// Specifies the prefix for target-related conditions.
+        /// Determines if the given condition is related to druid specific resources.
         /// </summary>
-        protected override string ConditionPrefix => "target.";
+        /// <param name="condition">The condition string to check.</param>
+        /// <returns>The matched prefix if the condition is related to a druid specific resource, and null otherwise.</returns>
+        public override string? CanConvert(string condition)
+        {
+            return condition switch
+            {
+                string s when s.StartsWith("fight_remains") => "fight_remains",
+                string s when s.StartsWith("fight_style") => "fight_style",
+                string s when s.StartsWith("in_combat") => "in_combat",
+                string s when s.StartsWith("target.") => "target.",
+                string s when s.StartsWith("time") => "time",
+                // Add other power-related conditions as needed
+                _ => null
+            };
+        }
 
         /// <summary>
         /// Converts the given task related to a unit into its corresponding representation.
@@ -22,8 +36,31 @@
             string result;
             bool negate = false;
             bool converted = true;
+            if (conditionType == "fight_remains" || conditionType == "fight_style" || conditionType == "in_combat" || conditionType == "time")
+            {
+                task = conditionType;
+            }
+            if (conditionType == "target")
+            {
+                task = spell;
+                spell = command;
+            }
+
             switch (task)
             {
+                case "fight_remains":
+                    result = "unit.ttdGroup(40)";
+                    break;
+                case "fight_style":
+                    result = $"unit.instance(\"{spell}\")";
+                    break;
+                case "in_combat":
+                    result = "unit.inCombat()";
+                    break;
+                case "time":
+                    result = "unit.combatTime()";
+                    break;
+                case "timeToDie":
                 case "time_to_die":
                 case "":
                     result = "unit.ttd(PLACEHOLDER)";

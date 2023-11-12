@@ -38,6 +38,10 @@
                 task = conditionType;
                 spell = command;
             }
+            if (conditionType == "energy")
+            {
+                task = conditionType;
+            }
             if (spell == "deficit")
             {
                 task = spell;

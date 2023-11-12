@@ -39,7 +39,8 @@ namespace SimcToBrConverter
 
             if (actionLine.ListName != lastListName && !string.IsNullOrEmpty(actionLine.ListName))
             {
-                output.AppendLine("end");
+                if (!String.IsNullOrEmpty(lastListName))
+                    output.AppendLine("end");
                 output.AppendLine();
             }
 
@@ -119,9 +120,10 @@ namespace SimcToBrConverter
             var processedActionLines = ProcessActionLines(actionLines, actionHandlers, conditionConversionService);
             StringBuilder output = new StringBuilder();
 
+            conditionConversionService.Locals.Add("ui"); // Add ui to the list of locals (it's always used)
             var locals = conditionConversionService.Locals.ToList();
             locals.Sort();
-            foreach (var local in conditionConversionService.Locals)
+            foreach (var local in locals)
             {
                 output.AppendLine($"local {local}");
             }
@@ -138,7 +140,7 @@ namespace SimcToBrConverter
 
             output.AppendLine("function br.rotations.profile()");
             output.AppendLine();
-            foreach (var local in conditionConversionService.Locals)
+            foreach (var local in locals)
             {
                 output.AppendLine($"    {local} = br.player.{local}");
             }

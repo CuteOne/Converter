@@ -8,7 +8,7 @@
         /// <summary>
         /// Specifies the prefix for conditions this converter can handle.
         /// </summary>
-        protected override string ConditionPrefix => "spell_targets.";
+        protected override string ConditionPrefix => "spell_targets";
 
         /// <summary>
         /// Converts the given task related to a spell into its corresponding representation.

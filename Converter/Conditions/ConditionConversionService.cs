@@ -73,8 +73,7 @@ public class ConditionConversionService
 
         // Convert logical operators to their Lua equivalents
         string checkConditions = StringUtilities.CheckForOr(convertedConditions.ToString());
-        var finalConvertedCondition = ConditionConverterUtility.ConvertLogicalOperatorsToLua(checkConditions);
-        //var finalConvertedCondition = ConditionConverterUtility.ConvertLogicalOperatorsToLua(convertedConditions.ToString());
+        var finalConvertedCondition = ConditionConverterUtility.ConvertOperatorsToLua(checkConditions);
         actionLine.Condition = finalConvertedCondition;
 
         return (actionLine, notConvertedConditions);
