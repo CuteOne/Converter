@@ -15,6 +15,7 @@ namespace SimcToBrConverter.ActionHandlers
         {
             if (actionLine.Action.Contains("run_action_list") || actionLine.Action.Contains("call_action_list"))
             {
+                actionLine.Type = ActionType.ActionList;
                 // Extract the name of the action list from the SpecialHandling property
                 var actionListName = actionLine.SpecialHandling.Replace("name=", "").Trim();
                 actionLine.Action = $"actionList.{actionListName}";

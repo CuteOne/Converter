@@ -13,6 +13,7 @@ namespace SimcToBrConverter.ActionHandlers
 
         protected override ActionLine CheckHandling(ActionLine actionLine)
         {
+            actionLine.Type = ActionType.Variable;
             var nameValue = actionLine.SpecialHandling.Replace("name=", "").Trim();
             var opValue = actionLine.Condition.Replace("op=", "").Trim();
 

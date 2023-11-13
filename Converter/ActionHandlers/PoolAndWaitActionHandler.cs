@@ -15,6 +15,7 @@ namespace SimcToBrConverter.ActionHandlers
         {
             if (actionLine.Action.Contains("pool_resource"))
             {
+                actionLine.Type = ActionType.Pool;
                 // Extract the name of the action list from the SpecialHandling property
                 //var actionListName = actionLine.SpecialHandling.Replace("name=", "").Trim();
                 //actionLine.Action = $"actionList.{actionListName}";
@@ -25,6 +26,7 @@ namespace SimcToBrConverter.ActionHandlers
 
             if (actionLine.Action.Contains("wait"))
             {
+                actionLine.Type = ActionType.Wait;
                 actionLine.Condition = $"{actionLine.SpecialHandling.Replace("sec=", "").Trim()}+=&{actionLine.Condition}";
                 return actionLine;
             }

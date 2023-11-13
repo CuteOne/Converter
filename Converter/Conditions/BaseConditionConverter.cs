@@ -16,10 +16,6 @@ namespace SimcToBrConverter.Conditions
         // Splits the condition part into its constituent components: conditionType, spell, and task.
         private static (string ConditionType, string Spell, string Task, string AdditionalParts) SplitConditionPart(string part)
         {
-            if (part.StartsWith("cooldown"))
-            {
-                part = part;
-            }
             var subparts = part.Split('.');
             var conditionType = subparts[0];
             var spell = subparts.Length > 1 ? subparts[1] : string.Empty;

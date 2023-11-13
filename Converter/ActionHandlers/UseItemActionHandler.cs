@@ -23,20 +23,28 @@ namespace SimcToBrConverter.ActionHandlers
             switch (actionLine.Action)
             {
                 case string s when s.Contains("use_items"):
+                    actionLine.Type = ActionType.Module;
                     actionLine.Action = "module";
                     actionLine.SpecialHandling = "name=basic_trinkets";
                     break;
                 case string s when s.Contains("augmentation"):
+                    actionLine.Type = ActionType.UseItem;
                     actionLine.Action = "use_item";
                     actionLine.SpecialHandling = "name=augmentation";
                     break;
                 case string s when s.Contains("flask"):
+                    actionLine.Type = ActionType.UseItem;
                     actionLine.Action = "use_item";
                     actionLine.SpecialHandling = "name=flask";
                     break;
                 case string s when s.Contains("potion"):
+                    actionLine.Type = ActionType.UseItem;
                     actionLine.Action = "use_item";
                     actionLine.SpecialHandling = "name=potion";
+                    break;
+                case string s when s.Contains("use_item"):
+                    actionLine.Type = ActionType.UseItem;
+                    actionLine.Action = "use_item";
                     break;
                 case string s when s.Contains("food") || s.Contains("snapshot_stats"):
                     actionLine = new ActionLine();
