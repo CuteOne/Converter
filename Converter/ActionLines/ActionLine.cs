@@ -8,8 +8,9 @@
         public string Condition { get; set; }
         public string Comment { get; set; }
         public ActionType Type { get; set; }
+        public string PoolCondition { get; set; }
 
-        public ActionLine(string listName = "", string action = "", string specialHandling = "", string condition = "", string comment = "", ActionType type = ActionType.Default)
+        public ActionLine(string listName = "", string action = "", string specialHandling = "", string condition = "", string comment = "", ActionType type = ActionType.Default, string poolCondition = "")
         {
             ListName = listName;
             Action = action;
@@ -17,6 +18,7 @@
             Condition = condition;
             Comment = comment;
             Type = type;
+            PoolCondition = poolCondition;
         }
     }
 }

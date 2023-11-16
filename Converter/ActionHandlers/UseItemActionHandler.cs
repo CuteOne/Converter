@@ -1,4 +1,5 @@
 ﻿using SimcToBrConverter.ActionLines;
+using SimcToBrConverter.Conditions;
 using System.Text.RegularExpressions;
 
 namespace SimcToBrConverter.ActionHandlers
@@ -20,39 +21,25 @@ namespace SimcToBrConverter.ActionHandlers
 
         protected override ActionLine CheckHandling(ActionLine actionLine)
         {
-            switch (actionLine.Action)
+            if (actionLine.Action is string s)
             {
-                case string s when s.Contains("use_items"):
+                if (s.Contains("use_items"))
+                {
                     actionLine.Type = ActionType.Module;
                     actionLine.Action = "module";
+                    Program.Locals.Add("module");
                     actionLine.SpecialHandling = "name=basic_trinkets";
-                    break;
-                case string s when s.Contains("augmentation"):
+                }
+                else if (s.Contains("augmentation") || s.Contains("flask") || s.Contains("potion") || s.Contains("use_item"))
+                {
                     actionLine.Type = ActionType.UseItem;
-                    actionLine.Action = "use_item";
-                    actionLine.SpecialHandling = "name=augmentation";
-                    break;
-                case string s when s.Contains("flask"):
-                    actionLine.Type = ActionType.UseItem;
-                    actionLine.Action = "use_item";
-                    actionLine.SpecialHandling = "name=flask";
-                    break;
-                case string s when s.Contains("potion"):
-                    actionLine.Type = ActionType.UseItem;
-                    actionLine.Action = "use_item";
-                    actionLine.SpecialHandling = "name=potion";
-                    break;
-                case string s when s.Contains("use_item"):
-                    actionLine.Type = ActionType.UseItem;
-                    actionLine.Action = "use_item";
-                    break;
-                case string s when s.Contains("food") || s.Contains("snapshot_stats"):
+                    Program.Locals.Add("use");
+                }
+                else if (s.Contains("food") || s.Contains("snapshot_stats"))
+                {
                     actionLine = new ActionLine();
-                    break;
-                default:
-                    break;
-            }
-            
+                }
+            }         
             var nameValue = actionLine.SpecialHandling.Replace("name=", "").Trim();
 
             // Handle trinket.integer.is case
@@ -66,7 +53,7 @@ namespace SimcToBrConverter.ActionHandlers
             actionLine.Condition = Regex.Replace(actionLine.Condition, patternCooldown, replacementCooldown);
 
             if (!string.IsNullOrEmpty(actionLine.Action) && !string.IsNullOrEmpty(nameValue))
-                actionLine.Action = $"{actionLine.Action}.{nameValue}";
+                actionLine.Action = $"{nameValue}";
             //actionLine.Condition = opValue;
 
             return actionLine;

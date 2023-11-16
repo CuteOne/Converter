@@ -1,4 +1,5 @@
 ﻿using SimcToBrConverter.ActionLines;
+using SimcToBrConverter.Conditions;
 using System.Text;
 
 namespace SimcToBrConverter.Generators
@@ -12,8 +13,6 @@ namespace SimcToBrConverter.Generators
 
         public override string GenerateActionLineCode(ActionLine actionLine, string formattedCommand, string debugCommand, string convertedCondition, string listNameTag)
         {
-            convertedCondition = PrependConditions(convertedCondition);
-
             var output = new StringBuilder();
 
             output.AppendLine($"    if use.able.{formattedCommand}(){convertedCondition} then");

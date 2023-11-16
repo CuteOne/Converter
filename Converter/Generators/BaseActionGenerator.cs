@@ -16,25 +16,23 @@ namespace SimcToBrConverter.Generators
             {
                 case ActionType.ActionList:
                     actionTag = "Action List - ";
-                    actionLine.Action = actionLine.Action.Replace("actionList.", "");
                     break;
                 case ActionType.Module:
                     actionTag = "Module - ";
-                    actionLine.Action = actionLine.Action.Replace("module.", "");
                     break;
                 case ActionType.UseItem:
                     actionTag = "Use Item - ";
-                    actionLine.Action = actionLine.Action.Replace("use_item.", "");
                     break;
                 case ActionType.Variable:
                     actionTag = "Variable - ";
-                    actionLine.Action = actionLine.Action.Replace("var.", "");
+                    //actionLine.Action = actionLine.Comment.Replace("Var.", "");
                     break;
                 default:
                     break;
             }
 
-            var debugCommand = StringUtilities.ConvertToTitleCase(actionLine.Action);
+            var command = actionLine.Action.Replace("var.", "");
+            var debugCommand = StringUtilities.ConvertToTitleCase(command);
             var output = new StringBuilder();
 
             output.AppendLine($"    -- {actionTag}{debugCommand}"); // Append the action type and debug command to the output

@@ -14,7 +14,12 @@ namespace SimcToBrConverter.Generators
         {
             var output = new StringBuilder();
 
-            output.AppendLine($"    -- TODO: Implement Pool Generator Code");
+            if (!actionLine.SpecialHandling.Contains("for_next=1"))
+            { 
+                output.AppendLine($"    if {convertedCondition} then");
+                output.AppendLine($"        return true");
+                output.AppendLine($"    end");    
+            }
 
             return output.ToString();
         }

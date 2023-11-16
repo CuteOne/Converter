@@ -155,8 +155,8 @@ namespace SimcToBrConverter
             StringBuilder output = new();
 
             // Generate Locals
-            conditionConversionService.Locals.Add("ui"); // Add ui to the list of locals (it's always used)
-            var locals = conditionConversionService.Locals.ToList();
+            Program.Locals.Add("ui"); // Add ui to the list of locals (it's always used)
+            var locals = Program.Locals.ToList();
             locals.Sort();
             foreach (var local in locals)
             {

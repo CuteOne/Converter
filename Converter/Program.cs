@@ -47,10 +47,16 @@ namespace SimcToBrConverter
         }
 
         /// <summary>
+        /// Containsa a list of local variables used by the converted code.
+        /// </summary>
+        /// <returns>A list of locals</returns>
+        public static HashSet<string> Locals { get; set; } = new HashSet<string>();
+
+        /// <summary>
         /// Retrieves a list of condition converters used for action conversion.
         /// </summary>
         /// <returns>A list of condition converters.</returns>
-        private static List<IConditionConverter> GetConditionConverters()
+        public static List<IConditionConverter> GetConditionConverters()
         {
             return new List<IConditionConverter>
             {
@@ -96,6 +102,7 @@ namespace SimcToBrConverter
         private static List<ActionLine> ParseActions(string[] profileLines)
         {
             List<ActionLine> actionLines = new();
+            string poolCondition = string.Empty;
 
             foreach (var line in profileLines)
             {
@@ -104,16 +111,35 @@ namespace SimcToBrConverter
                     var result = ActionLineParser.ParseActionLine(line);
                     if (result is ActionLine singleResult)
                     {
+                        poolCondition = HandlePool(poolCondition, singleResult);
                         actionLines.Add(singleResult);
                     }
                     else if (result is MultipleActionLineResult multipleResult)
                     {
+                        foreach (ActionLine singleLine in multipleResult.ActionLines)
+                        {
+                            poolCondition = HandlePool(poolCondition, singleLine);
+                        }
                         actionLines.AddRange(multipleResult.ActionLines);
                     }
                 }
             }
 
             return actionLines;
+        }
+
+        private static string HandlePool(string poolCondition, ActionLine line)
+        {
+            if (!string.IsNullOrEmpty(poolCondition))
+            {
+                line.PoolCondition = $"pool_if={poolCondition}";
+                return string.Empty;
+            }
+            if (line.Action.Contains("pool_resource") && line.SpecialHandling.Contains("for_next=1"))
+            {
+                return line.Condition;
+            }
+            return string.Empty;
         }
     }
 }

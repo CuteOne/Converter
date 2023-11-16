@@ -8,11 +8,17 @@ namespace SimcToBrConverter.ActionHandlers
 
         public override bool CanHandle(ActionLine actionLine)
         {
-            return actionLine.Action.Contains("pool_resource") || actionLine.Action.Contains("wait");
+            return actionLine.Action.Contains("pool_resource") || actionLine.Action.Contains("wait");// || actionLine.SpecialHandling.Contains("pool_if=");
         }
 
         protected override ActionLine CheckHandling(ActionLine actionLine)
         {
+            /*if (actionLine.SpecialHandling.Contains("pool_if="))
+            {
+                actionLine.Type = ActionType.Pool;
+                actionLine.SpecialHandling = actionLine.SpecialHandling.Replace("pool_if=", "");
+            }*/
+
             if (actionLine.Action.Contains("pool_resource"))
             {
                 actionLine.Type = ActionType.Pool;

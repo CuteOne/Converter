@@ -13,6 +13,7 @@ namespace SimcToBrConverter.Generators
         public override string GenerateActionLineCode(ActionLine actionLine, string formattedCommand, string debugCommand, string convertedCondition, string listNameTag)
         {
             convertedCondition = PrependConditions(convertedCondition);
+            convertedCondition = convertedCondition.Replace("PLACEHOLDER", "thisUnit");
 
             var output = new StringBuilder();
 

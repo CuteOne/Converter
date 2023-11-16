@@ -7,12 +7,12 @@ namespace SimcToBrConverter.Conditions
     public class ConditionConversionService
     {
         private readonly List<IConditionConverter> _conditionConverters;
-        public HashSet<string> Locals { get; private set; } = new HashSet<string>();
 
         public ConditionConversionService(List<IConditionConverter> conditionConverters)
         {
             _conditionConverters = conditionConverters;
         }
+
         private void AddToLocalList(string local)
         {
             // Remove the "not " prefix
@@ -29,7 +29,7 @@ namespace SimcToBrConverter.Conditions
 
             if (!string.IsNullOrWhiteSpace(local) && !local.Equals("false"))
             {
-                Locals.Add(local);
+                Program.Locals.Add(local);
             }
         }
 

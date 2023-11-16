@@ -18,7 +18,7 @@ namespace SimcToBrConverter.Generators
             debugCommand = debugCommand.Replace(" ", "");
 
             // Generate module code
-            output.AppendLine($" module.{debugCommand}()");
+            output.AppendLine($"    module.{debugCommand}()");
 
             return output.ToString();
         }

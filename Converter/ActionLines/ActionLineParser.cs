@@ -11,7 +11,6 @@ namespace SimcToBrConverter.ActionLines
             @"^actions\.?(?:\w+)?(?:(?=\+=/)|(?==))(?:\+=/|=)(?<comment>.+)$",
             RegexOptions.Compiled);
 
-
         public static IParseResult ParseActionLine(string line)
         {
             var match = ActionPattern.Match(line);
