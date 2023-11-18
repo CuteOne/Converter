@@ -6,7 +6,7 @@ namespace SimcToBrConverter
 {
     class Program
     {
-        private static string PROFILE_URL = "https://raw.githubusercontent.com/simulationcraft/simc/dragonflight/profiles/Tier31/T31_Druid_Feral.simc";
+        private static string PROFILE_URL = "https://github.com/simulationcraft/simc/blob/dragonflight/profiles/Tier31/T31_Druid_Feral.simc";
 
         static async Task Main()
         {
@@ -14,6 +14,7 @@ namespace SimcToBrConverter
             if (PROFILE_URL.Contains("github.com"))
             {
                 PROFILE_URL = PROFILE_URL.Replace("github.com", "raw.githubusercontent.com");
+                PROFILE_URL = PROFILE_URL.Replace("/blob", "");
             }
 
             // Download the SimulationCraft profile
