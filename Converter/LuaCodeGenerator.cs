@@ -156,8 +156,12 @@ namespace SimcToBrConverter
 
             // Generate Locals
             Program.Locals.Add("ui"); // Add ui to the list of locals (it's always used)
-            var locals = Program.Locals.ToList();
-            locals.Sort();
+
+            var locals = Program.Locals
+                .Select(s => s.Replace("()", ""))
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
             foreach (var local in locals)
             {
                 output.AppendLine($"local {local}");
@@ -181,7 +185,11 @@ namespace SimcToBrConverter
             // Main Rotation - Generate Local Defines
             foreach (var local in locals)
             {
-                output.AppendLine($"    {local} = br.player.{local}");
+                // Check if the local is a power type
+                if (IsPowerType(local))
+                    output.AppendLine($"    {local} = br.player.power.{local}");
+                else
+                    output.AppendLine($"    {local} = br.player.{local}");
             }
             output.AppendLine();
 
@@ -195,6 +203,35 @@ namespace SimcToBrConverter
 
             //File.WriteAllText("output.lua", output.ToString());
             Console.WriteLine(output.ToString());
+        }
+
+        internal static bool IsPowerType(string conditionType)
+        {
+            return conditionType switch
+            {
+                string s when s.Equals("mana", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("rage", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("focus", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("energy", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("comboPoints", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("runes", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("runicPower", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("soulShards", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("lunarPower", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("holyPower", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("alternate", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("maelstrom", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("chi", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("insanity", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("arcaneCharges", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("fury", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("pain", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("essence", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("runeBlood", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("runeFrost", StringComparison.OrdinalIgnoreCase) => true,
+                string s when s.Equals("runeUnholy", StringComparison.OrdinalIgnoreCase) => true,
+                _ => false
+            };
         }
     }
 }

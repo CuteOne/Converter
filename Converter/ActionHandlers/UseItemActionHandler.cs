@@ -30,6 +30,13 @@ namespace SimcToBrConverter.ActionHandlers
                     Program.Locals.Add("module");
                     actionLine.SpecialHandling = "name=basic_trinkets";
                 }
+                else if (s.Contains("flask"))
+                {
+                    actionLine.Type = ActionType.Module;
+                    actionLine.Action = "module";
+                    Program.Locals.Add("module");
+                    actionLine.SpecialHandling = "name=flask_up";
+                }
                 else if (s.Contains("augmentation") || s.Contains("flask") || s.Contains("potion") || s.Contains("use_item"))
                 {
                     actionLine.Type = ActionType.UseItem;

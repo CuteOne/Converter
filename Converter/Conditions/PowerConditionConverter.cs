@@ -49,13 +49,16 @@
             switch (task)
             {
                 case "combo_points":
-                    result = $"power.amount.comboPoints()";
+                    result = $"comboPoints()";
+                    //Program.Locals.Add("power.comboPoints");
                     break;
                 case "deficit":
-                    result = $"power.deficit.energy()";
+                    result = $"energy.deficit()";
+                    //Program.Locals.Add("power.energy");
                     break;
                 case "energy":
-                    result = $"power.energy()";
+                    result = $"energy()";
+                    //Program.Locals.Add("power.energy");
                     break;
                 default:
                     result = ""; // Unknown task

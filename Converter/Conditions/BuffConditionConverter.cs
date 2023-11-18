@@ -24,19 +24,45 @@
             {
                 case "up":
                 case "react":
-                    // Checks if the buff is currently active on the target.
-                    result = $"buff.{spell}.exists()";
-                    break;
+                    if (spell.StartsWith("bt"))
+                    {
+                        // Special handling for the Bloodtalons buff
+                        spell = spell.Replace("bt", "");
+                        spell = char.ToLower(spell[0]) + spell[1..];
+                        result = $"btGen.{spell}";
+                        break;
+                    }
+                    else
+                    { 
+                        // Checks if the buff is currently active on the target.
+                        result = $"buff.{spell}.exists()";
+                        break;
+                    }
                 case "down":
-                    // Checks if the buff is not active on the target.
-                    result = $"buff.{spell}.exists()";
-                    negate = true; // Reverse the condition to check for buff absence.
-                    break;
+                    if (spell.StartsWith("bt"))
+                    {
+                        // Special handling for the Bloodtalons buff
+                        spell = spell.Replace("bt", "");
+                        spell = char.ToLower(spell[0]) + spell[1..];
+                        result = $"btGen.{spell}";
+                        negate = true; // Reverse the condition to check for buff absence.
+                        break;
+                    }
+                    else
+                    {
+                        // Checks if the buff is not active on the target.
+                        result = $"buff.{spell}.exists()";
+                        negate = true; // Reverse the condition to check for buff absence.
+                        break;
+                    }
                 case "remains":
                     // Gets the remaining duration of the buff on the target.
                     result = $"buff.{spell}.remains()";
                     break;
                 case "stack":
+                    // Gets the current stack count of the buff on the target.
+                    result = $"buff.{spell}.stack()";
+                    break;
                 case "value":
                     // Gets the current stack count or value of the buff on the target.
                     result = $"buff.{spell}.count()";

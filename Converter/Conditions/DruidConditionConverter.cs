@@ -30,7 +30,7 @@
             switch (task)
             {
                 case "active_bt_triggers":
-                    result = $"var.btGen.triggers";
+                    result = $"btGen.triggers";
                     break;
                 default:
                     result = ""; // Unknown task

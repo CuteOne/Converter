@@ -32,13 +32,23 @@ namespace SimcToBrConverter.ActionHandlers
                     }
                     else
                     {
-                        actionLine.Comment = $"{actionLine.Comment}\n    -- TODO: Handle {actionLine.SpecialHandling}";
+                        actionLine.Comment = $"{actionLine.Comment}\n    -- TODO: Handle {entry}";
                     }
                 }
                 if (entry.Contains("max_energy=1"))
                 {
                     if (actionLine.Action == "ferocious_bite")
                         AddToCondition(actionLine, "energy>=50");
+                }
+                if (entry.Contains("name="))
+                {
+                    var nameValue = entry.Replace("name=", "").Trim();
+                    if (!string.IsNullOrEmpty(actionLine.Action) && !string.IsNullOrEmpty(nameValue))
+                    {
+                        actionLine.Action = $"{nameValue}";
+                        actionLine.Type = ActionType.UseItem;
+                        Program.Locals.Add("use");
+                    }
                 }
             }
             
