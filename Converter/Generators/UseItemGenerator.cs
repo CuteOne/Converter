@@ -1,5 +1,6 @@
 ﻿using SimcToBrConverter.ActionLines;
 using SimcToBrConverter.Conditions;
+using SimcToBrConverter.Utilities;
 using System.Text;
 
 namespace SimcToBrConverter.Generators
@@ -20,6 +21,8 @@ namespace SimcToBrConverter.Generators
             output.AppendLine($"    if use.able.{formattedCommand}(){convertedCondition} then");
             output.AppendLine($"        if use.{formattedCommand}() then ui.debug(\"Using {debugCommand}{listNameTag}\") return true end");
             output.AppendLine($"    end");
+
+            SpellRepository.AddSpell(formattedCommand, "items");
 
             return output.ToString();
         }

@@ -1,4 +1,6 @@
-﻿namespace SimcToBrConverter.Conditions
+﻿using SimcToBrConverter.Utilities;
+
+namespace SimcToBrConverter.Conditions
 {
     public class ItemConditionConverter : BaseConditionConverter
     {

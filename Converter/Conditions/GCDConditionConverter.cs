@@ -1,4 +1,6 @@
-﻿namespace SimcToBrConverter.Conditions
+﻿using SimcToBrConverter.Utilities;
+
+namespace SimcToBrConverter.Conditions
 {
     /// <summary>
     /// Handles conditions related to the Global Cooldown (GCD) of abilities.

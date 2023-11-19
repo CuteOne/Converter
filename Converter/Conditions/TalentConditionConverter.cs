@@ -1,4 +1,6 @@
-﻿namespace SimcToBrConverter.Conditions
+﻿using SimcToBrConverter.Utilities;
+
+namespace SimcToBrConverter.Conditions
 {
     /// <summary>
     /// Handles the conversion of conditions related to talents.
@@ -33,6 +35,9 @@
                     converted = false;
                     break;
             }
+
+            if (!string.IsNullOrEmpty(result))
+                SpellRepository.AddSpell(spell, "talents");
 
             return (result, negate, converted);
         }

@@ -52,6 +52,7 @@
                     result = "unit.ttdGroup(40)";
                     break;
                 case "fight_style":
+                    if (spell == "dungeonslice") spell = "party";
                     result = $"unit.instance(\"{spell}\")";
                     break;
                 case "in_combat":

@@ -1,4 +1,6 @@
-﻿namespace SimcToBrConverter.Conditions
+﻿using SimcToBrConverter.Utilities;
+
+namespace SimcToBrConverter.Conditions
 {
     /// <summary>
     /// Handles the conversion of conditions related to cooldowns.

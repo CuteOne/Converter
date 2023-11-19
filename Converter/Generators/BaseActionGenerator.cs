@@ -32,7 +32,7 @@ namespace SimcToBrConverter.Generators
             }
 
             var command = actionLine.Action.Replace("var.", "");
-            var debugCommand = StringUtilities.ConvertToTitleCase(command);
+            var debugCommand = StringUtilities.ConvertToTitleCase(command.Replace("actionList.",""));
             var output = new StringBuilder();
 
             output.AppendLine($"    -- {actionTag}{debugCommand}"); // Append the action type and debug command to the output

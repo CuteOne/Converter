@@ -1,4 +1,6 @@
-﻿namespace SimcToBrConverter.Conditions
+﻿using SimcToBrConverter.Utilities;
+
+namespace SimcToBrConverter.Conditions
 {
     /// <summary>
     /// Handles the conversion of conditions that start with "dot." or "debuff." prefixes.
@@ -72,6 +74,9 @@
                     converted = false;
                     break;
             }
+
+            if (!string.IsNullOrEmpty(result))
+                SpellRepository.AddSpell(spell, "debuffs");
 
             return (result, negate, converted);
         }

@@ -155,6 +155,7 @@ namespace SimcToBrConverter
             StringBuilder output = new();
 
             // Generate Locals
+            Program.Locals.Add("actionList"); // Add actionList to the list of locals (it's always used)
             Program.Locals.Add("ui"); // Add ui to the list of locals (it's always used)
 
             var locals = Program.Locals
@@ -166,7 +167,6 @@ namespace SimcToBrConverter
             {
                 output.AppendLine($"local {local}");
             }
-            output.AppendLine("local actionList = {}");
             output.AppendLine();
 
             // Generate Action Lists
@@ -200,9 +200,11 @@ namespace SimcToBrConverter
             }
 
             output.AppendLine("end");
+            output.AppendLine();
 
             //File.WriteAllText("output.lua", output.ToString());
             Console.WriteLine(output.ToString());
+            SpellRepository.PrintSpellsByType();
         }
 
         internal static bool IsPowerType(string conditionType)

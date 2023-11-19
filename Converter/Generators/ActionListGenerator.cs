@@ -14,6 +14,7 @@ namespace SimcToBrConverter.Generators
             var output = new StringBuilder();
 
             // Remove spaces from the debug command
+            debugCommand = debugCommand.Replace("Actionlist.", "");
             debugCommand = debugCommand.Replace(" ", "");
 
             if (string.IsNullOrEmpty(actionLine.Condition))

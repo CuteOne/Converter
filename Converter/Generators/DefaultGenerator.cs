@@ -1,5 +1,6 @@
 ﻿using SimcToBrConverter.ActionLines;
 using SimcToBrConverter.Conditions;
+using SimcToBrConverter.Utilities;
 using System.Text;
 
 namespace SimcToBrConverter.Generators
@@ -36,6 +37,8 @@ namespace SimcToBrConverter.Generators
             }
             output.AppendLine($"        if cast.{formattedCommand}() then ui.debug(\"Casting {debugCommand}{listNameTag}\") return true end");
             output.AppendLine($"    end");
+
+            SpellRepository.AddSpell(formattedCommand, "abilities");
 
             return output.ToString();
         }
