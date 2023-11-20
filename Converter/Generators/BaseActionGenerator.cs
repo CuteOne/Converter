@@ -25,7 +25,6 @@ namespace SimcToBrConverter.Generators
                     break;
                 case ActionType.Variable:
                     actionTag = "Variable - ";
-                    //actionLine.Action = actionLine.Comment.Replace("Var.", "");
                     break;
                 default:
                     break;

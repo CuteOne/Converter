@@ -188,6 +188,8 @@ namespace SimcToBrConverter
                 // Check if the local is a power type
                 if (IsPowerType(local))
                     output.AppendLine($"    {local} = br.player.power.{local}");
+                else if (local.Equals("var", StringComparison.OrdinalIgnoreCase))
+                    output.AppendLine($"    {local} = br.player.variable");
                 else
                     output.AppendLine($"    {local} = br.player.{local}");
             }
