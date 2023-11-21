@@ -6,9 +6,14 @@
     public class SpellTargetsConditionConverter : BaseConditionConverter
     {
         /// <summary>
-        /// Specifies the prefix for conditions this converter can handle.
+        /// Determines if the given condition starts with listed string prefix(es).
         /// </summary>
-        protected override string ConditionPrefix => "spell_targets";
+        /// <param name="condition">The condition string to check.</param>
+        /// <returns>True if the condition starts with listed string(s), and false otherwise.</returns>
+        public override bool CanConvert(string condition)
+        {
+            return condition.StartsWith("spell_targets.");
+        }
 
         /// <summary>
         /// Converts the given task related to a spell into its corresponding representation.

@@ -7,8 +7,15 @@ namespace SimcToBrConverter.Conditions
     /// </summary>
     public class CooldownConditionConverter : BaseConditionConverter
     {
-        // Specifies the prefix for conditions related to cooldowns.
-        protected override string ConditionPrefix => "cooldown.";
+        /// <summary>
+        /// Determines if the given condition starts with listed string prefix(es).
+        /// </summary>
+        /// <param name="condition">The condition string to check.</param>
+        /// <returns>True if the condition starts with listed string(s), and false otherwise.</returns>
+        public override bool CanConvert(string condition)
+        {
+            return condition.StartsWith("cooldown.");
+        }
 
         /// <summary>
         /// Converts specific tasks related to cooldowns.

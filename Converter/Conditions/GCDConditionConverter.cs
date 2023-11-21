@@ -7,8 +7,15 @@ namespace SimcToBrConverter.Conditions
     /// </summary>
     public class GCDConditionConverter : BaseConditionConverter
     {
-        // Specifies the prefix for conditions this converter can handle
-        protected override string ConditionPrefix => "gcd.";
+        /// <summary>
+        /// Determines if the given condition starts with listed string prefix(es).
+        /// </summary>
+        /// <param name="condition">The condition string to check.</param>
+        /// <returns>True if the condition starts with listed string(s), and false otherwise.</returns>
+        public override bool CanConvert(string condition)
+        {
+            return condition.StartsWith("gcd.");
+        }
 
         /// <summary>
         /// Converts the given task related to the GCD into the appropriate format.

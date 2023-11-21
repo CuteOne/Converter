@@ -4,14 +4,9 @@ namespace SimcToBrConverter.Conditions
 {
     public abstract class BaseConditionConverter : IConditionConverter
     {
-        // Virtual property that derived classes can override to specify the prefix for conditions they handle.
-        protected virtual string ConditionPrefix => "";
 
         // Determines if the converter can handle the given condition based on its prefix.
-        public virtual string? CanConvert(string conditionPart)
-        {
-            return conditionPart.StartsWith(ConditionPrefix) ? ConditionPrefix : null;
-        }
+        public abstract bool CanConvert(string conditionPart);
 
         // Splits the condition part into its constituent components: conditionType, spell, and task.
         private static (string ConditionType, string Spell, string Task, string AdditionalParts) SplitConditionPart(string part)

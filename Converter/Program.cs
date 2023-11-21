@@ -6,7 +6,7 @@ namespace SimcToBrConverter
 {
     class Program
     {
-        private static string PROFILE_URL = "https://github.com/simulationcraft/simc/blob/dragonflight/profiles/Tier31/T31_Druid_Feral.simc";
+        private static string PROFILE_URL = "https://github.com/simulationcraft/simc/blob/dragonflight/profiles/Tier31/T31_Demon_Hunter_Havoc.simc";
 
         static async Task Main()
         {

@@ -1,8 +1,9 @@
 ﻿using SimcToBrConverter.ActionLines;
+using SimcToBrConverter.Conditions;
 using SimcToBrConverter.Utilities;
 using System.Text;
 
-namespace SimcToBrConverter.Conditions
+namespace SimcToBrConverter
 {
     public class ConditionConversionService
     {
@@ -13,7 +14,7 @@ namespace SimcToBrConverter.Conditions
             _conditionConverters = conditionConverters;
         }
 
-        private void AddToLocalList(string local)
+        private static void AddToLocalList(string local)
         {
             // Remove the "not " prefix
             if (local.StartsWith("not "))
@@ -54,7 +55,7 @@ namespace SimcToBrConverter.Conditions
 
                 foreach (var converter in _conditionConverters)
                 {
-                    if (converter.CanConvert(conditionPart) != null)
+                    if (converter.CanConvert(conditionPart))
                     {
                         var (convertedPart, notConvertedParts) = converter.ConvertPart(conditionPart, actionLine.Action);
                         var local = convertedPart.Split('.')[0];

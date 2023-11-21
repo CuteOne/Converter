@@ -1,5 +1,4 @@
 ﻿using SimcToBrConverter.ActionLines;
-using SimcToBrConverter.Conditions;
 using SimcToBrConverter.Utilities;
 using System.Text;
 

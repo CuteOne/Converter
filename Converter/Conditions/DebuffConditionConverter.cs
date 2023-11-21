@@ -8,20 +8,16 @@ namespace SimcToBrConverter.Conditions
     public class DebuffConditionConverter : BaseConditionConverter
     {
         /// <summary>
-        /// Determines if the given condition starts with "dot." or "debuff." prefixes.
+        /// Determines if the given condition starts with listed string prefix(es).
         /// </summary>
         /// <param name="condition">The condition string to check.</param>
-        /// <returns>The matched prefix if the condition starts with either "dot." or "debuff.", and null otherwise.</returns>
-        public override string? CanConvert(string condition)
+        /// <returns>True if the condition starts with listed string(s), and false otherwise.</returns>
+        public override bool CanConvert(string condition)
         {
-            return condition switch
-            {
-                string s when s.StartsWith("dot.") => "dot.",
-                string s when s.StartsWith("debuff.") => "debuff.",
-                string s when s.StartsWith("persistent_multiplier") => "persistent_multiplier",
-                string s when s.StartsWith("refreshable") => "refreshable",
-                _ => null
-            };
+            return condition.StartsWith("dot.") ||
+                   condition.StartsWith("debuff.") ||
+                   condition.StartsWith("persistent_multiplier") ||
+                   condition.StartsWith("refreshable");
         }
 
         /// <summary>

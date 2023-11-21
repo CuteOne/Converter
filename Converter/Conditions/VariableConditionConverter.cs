@@ -10,7 +10,7 @@
         /// </summary>
         /// <param name="condition">The condition string to check.</param>
         /// <returns>The matched prefix if the condition is related to variable-related conditions, and null otherwise.</returns>
-        public override string? CanConvert(string condition)
+        public override bool CanConvert(string condition)
         {
             return condition switch
             {

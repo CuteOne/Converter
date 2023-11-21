@@ -1,4 +1,6 @@
-﻿namespace SimcToBrConverter.Conditions
+﻿using SimcToBrConverter.Utilities;
+
+namespace SimcToBrConverter.Conditions
 {
     /// <summary>
     /// Handles the conversion of conditions related to power resources like combo points, energy, mana, etc.
@@ -9,16 +11,10 @@
         /// Determines if the given condition is related to power resources.
         /// </summary>
         /// <param name="condition">The condition string to check.</param>
-        /// <returns>The matched prefix if the condition is related to a power resource, and null otherwise.</returns>
-        public override string? CanConvert(string condition)
+        /// <returns>True if the condition is related to a power resource, and false otherwise.</returns>
+        public override bool CanConvert(string condition)
         {
-            return condition switch
-            {
-                string s when s.StartsWith("combo_points") => "combo_points",
-                string s when s.StartsWith("energy") => "energy",
-                // Add other power-related conditions as needed
-                _ => null
-            };
+            return PowerType.IsPowerType(condition);
         }
 
         /// <summary>

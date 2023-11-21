@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace SimcToBrConverter.Conditions
+namespace SimcToBrConverter.Utilities
 {
     public static class ConditionConverterUtility
     {

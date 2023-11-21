@@ -7,8 +7,15 @@ namespace SimcToBrConverter.Conditions
     /// </summary>
     public class ActionConditionConverter : BaseConditionConverter
     {
-        // Override the ConditionPrefix property to specify the correct prefix
-        protected override string ConditionPrefix => "action.";
+        /// <summary>
+        /// Determines if the given condition starts with "action." prefixe.
+        /// </summary>
+        /// <param name="condition">The condition string to check.</param>
+        /// <returns>True if the condition starts with "action.", and false otherwise.</returns>
+        public override bool CanConvert(string condition)
+        {
+            return condition.StartsWith("action.");
+        }
 
         /// <summary>
         /// Converts specific tasks related to actions.

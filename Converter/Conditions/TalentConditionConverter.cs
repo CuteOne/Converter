@@ -8,9 +8,14 @@ namespace SimcToBrConverter.Conditions
     public class TalentConditionConverter : BaseConditionConverter
     {
         /// <summary>
-        /// Specifies the prefix for talent-related conditions.
+        /// Determines if the given condition starts with listed string prefix(es).
         /// </summary>
-        protected override string ConditionPrefix => "talent.";
+        /// <param name="condition">The condition string to check.</param>
+        /// <returns>True if the condition starts with listed string(s), and false otherwise.</returns>
+        public override bool CanConvert(string condition)
+        {
+            return condition.StartsWith("talent.");
+        }
 
         /// <summary>
         /// Converts the given task related to a talent into its corresponding representation.
