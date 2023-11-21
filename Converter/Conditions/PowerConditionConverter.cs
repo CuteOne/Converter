@@ -26,10 +26,10 @@ namespace SimcToBrConverter.Conditions
         /// <returns>A tuple containing the converted task, a flag indicating if negation is needed, and a flag indicating if the conversion was successful.</returns>
         public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command, string op)
         {
-            string result;
+            string result = "";
             bool negate = false;
-            bool converted = true;
-            if (conditionType == "combo_points")
+            bool converted = false;
+            /*if (conditionType == "combo_points")
             {
                 task = conditionType;
                 spell = command;
@@ -41,8 +41,26 @@ namespace SimcToBrConverter.Conditions
             if (spell == "deficit")
             {
                 task = spell;
+            }*/
+
+            foreach (var powerType in PowerType.PowerTypes)
+            {
+                if (conditionType.StartsWith(powerType.SimCText))
+                {
+                    if (!string.IsNullOrEmpty(spell))
+                    {
+                        result = $"{powerType.BrText}.{spell}()";
+                    }
+                    else
+                    {
+                        result = $"{powerType.BrText}()";
+                    }
+                    break;
+                }
             }
-            switch (task)
+            if (!string.IsNullOrEmpty(result))
+                converted = true;
+            /*switch (task)
             {
                 case "combo_points":
                     result = $"comboPoints()";
@@ -60,7 +78,7 @@ namespace SimcToBrConverter.Conditions
                     result = ""; // Unknown task
                     converted = false;
                     break;
-            }
+            }*/
 
             return (result, negate, converted);
         }

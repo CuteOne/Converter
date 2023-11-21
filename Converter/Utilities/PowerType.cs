@@ -12,7 +12,7 @@
         }
 
         // Static array of all power types
-        public static readonly PowerType[] AllPowerTypes =
+        public static readonly PowerType[] PowerTypes =
         {
             new("mana", "mana"),
             new("rage", "rage"),
@@ -52,7 +52,7 @@
         // Static method to identify power type from a condition string
         public static bool IsPowerType(string checkString)
         {
-            foreach (var powerType in AllPowerTypes)
+            foreach (var powerType in PowerTypes)
                 if (checkString.StartsWith(powerType.SimCText) || checkString.StartsWith(powerType.BrText))
                     return true;
 
