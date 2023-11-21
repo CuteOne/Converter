@@ -6,19 +6,14 @@
     public class VariableConditionConverter : BaseConditionConverter
     {
         /// <summary>
-        /// Determines if the given condition is related to variable-related conditions.
+        /// Determines if the given condition starts with listed string prefix(es).
         /// </summary>
         /// <param name="condition">The condition string to check.</param>
-        /// <returns>The matched prefix if the condition is related to variable-related conditions, and null otherwise.</returns>
+        /// <returns>True if the condition starts with listed string(s), and false otherwise.</returns>
         public override bool CanConvert(string condition)
         {
-            return condition switch
-            {
-                string s when s.StartsWith("variable.") => "variable.",
-                string s when s.StartsWith("reset") => "reset",
-                // Add other power-related conditions as needed
-                _ => null
-            };
+            return condition.StartsWith("variable.") ||
+                condition.StartsWith("reset");
         }
 
 

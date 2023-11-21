@@ -5,20 +5,15 @@ namespace SimcToBrConverter.Conditions
     public class ItemConditionConverter : BaseConditionConverter
     {
         /// <summary>
-        /// Determines if the given condition is related to item resources.
+        /// Determines if the given condition starts with listed string prefix(es).
         /// </summary>
         /// <param name="condition">The condition string to check.</param>
-        /// <returns>The matched prefix if the condition is related to an item resource, and null otherwise.</returns>
+        /// <returns>True if the condition starts with listed string(s), and false otherwise.</returns>
         public override bool CanConvert(string condition)
         {
-            return condition switch
-            {
-                string s when s.StartsWith("set_bonus") => "set_bonus",
-                string s when s.StartsWith("equipped") => "equipped",
-                string s when s.StartsWith("trinket") => "trinket",
-                // Add other item-related conditions as needed
-                _ => null
-            };
+            return condition.StartsWith("set_bonus.") ||
+                    condition.StartsWith("equipped") ||
+                    condition.StartsWith("trinket");
         }
 
         public override (string Result, bool Negate, bool Converted) ConvertTask(string conditionType, string spell, string task, string command, string op)
