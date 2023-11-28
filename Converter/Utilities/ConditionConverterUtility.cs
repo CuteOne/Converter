@@ -1,13 +1,12 @@
-﻿using SimcToBrConverter.ActionLines;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
 
 namespace SimcToBrConverter.Utilities
 {
     public static class ConditionConverterUtility
     {
-        //private static readonly Regex SplitConditionRegex = new(@"([&|\(\)!]|<=|>=|<|>|=|!=|\+|\-|\*|/|%%|%|@|<\?|>\?|\b\d+\b)", RegexOptions.Compiled);
-        private static readonly Regex SplitConditionRegex = new(@"([&|\(\)!]|<=|>=|<|>|=|!=|\+|\-|\*|/|%%|%|@|<\?|>\?|(?<!\.\d*)\b\d+\b(?!\.\d*))", RegexOptions.Compiled);
+        //private static readonly Regex SplitConditionRegex = new(@"([&|\(\)!]|<=|>=|<|>|=|!=|\+|\-|\*|/|%%|%|@|<\?|>\?|(?<!\.\d*)\b\d+\b(?!\.\d*))", RegexOptions.Compiled);
+        private static readonly Regex SplitConditionRegex = new(@"([&|\(\)!]|<=|>=|<\?|>\?|<|>|=|!=|\+|\-|\*|/|%|%%|@|floor\(|ceil\(|(?<!\.\d*)\b\d+\b(?!\.\d*))", RegexOptions.Compiled);
         private static readonly Regex ModulusRegex = new(@"(?<!%)%%", RegexOptions.Compiled);
         private static readonly Regex XorRegex = new(@"(?<=\b|\s|\()(?<x>[^&|^|^\!]+)\^(?<y>[^&|^|^\!]+)(?=\b|\s|\))", RegexOptions.Compiled);
         private static readonly Regex EqualityRegex = new(@"(?<![\!=<>])=(?![\!=<>])", RegexOptions.Compiled);
@@ -70,16 +69,26 @@ namespace SimcToBrConverter.Utilities
             builder.Clear();
             builder.Append(condition)
                    .Replace("@", "math.abs")
-                   .Replace("<?", "math.max")
-                   .Replace(">?", "math.min")
+                   .Replace("<?", "math.min")
+                   .Replace(">?", "math.max")
                    .Replace("floor(", "math.floor(")
                    .Replace("ceil(", "math.ceil(");
         }
 
+        public static bool IsLogicalOperator(string conditionPart)
+        {
+            return new[] { "&", "|", "!" }.Contains(conditionPart);
+        }
+
+        public static bool IsArithmeticOperator(string conditionPart)
+        {
+            return new[] { "+", "-", "*", "/", "%", "%%", "@", "<?", ">?", "<=", ">=", "<", ">", "(", ")", "=", "floor(", "ceil(" }
+                   .Contains(conditionPart);
+        }
+
         public static bool IsOperatorOrNumber(string conditionPart)
         {
-            return new[] { "&", "|", "(", ")", "!", "<=", ">=", "<", ">", "=", "!=", "+", "-", "*", "/", "%", "%%", "@", "<?", ">?", "floor(", "ceil(" }
-                   .Contains(conditionPart)
+            return IsLogicalOperator(conditionPart) || IsArithmeticOperator(conditionPart)
                    || double.TryParse(conditionPart, out _);
         }
     }

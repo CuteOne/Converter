@@ -1,26 +1,27 @@
-﻿using SimcToBrConverter.ActionLines;
+﻿using SimcToBrConverter.Utilities;
 
 namespace SimcToBrConverter.ActionHandlers
 {
     public class VariableActionHandler : BaseActionHandler
     {
-        public VariableActionHandler() : base() { }
-
-        public override bool CanHandle(ActionLine actionLine)
+        public override bool CanHandle()
         {
-            return actionLine.ListName.Contains("variables");
+            return Program.currentActionLine.ListName.Contains("variables") || Program.currentActionLine.Action.Contains("variable");
         }
 
-        protected override ActionLine CheckHandling(ActionLine actionLine)
+        public override void Handle()
         {
-            actionLine.Type = ActionType.Variable;
-            var nameValue = actionLine.SpecialHandling.Replace("name=", "").Trim();
-            var opValue = actionLine.Condition.Replace("op=", "").Trim();
+            Program.currentActionLine.Type = ActionType.Variable;
+            var nameValue = Program.currentActionLine.SpecialHandling.Replace("name=", "").Trim();
+            // Check if the first character is a digit
+            if (char.IsDigit(nameValue[0]))
+            {
+                nameValue = $"value{nameValue}";
+            }
+            var opValue = Program.currentActionLine.Condition.Replace("op=", "").Trim();
 
-            actionLine.Action = $"var.{nameValue}";
-            actionLine.Condition = opValue;
-
-            return actionLine;
+            Program.currentActionLine.Action = $"var.{nameValue}";
+            Program.currentActionLine.Condition = opValue;
         }
     }
 }

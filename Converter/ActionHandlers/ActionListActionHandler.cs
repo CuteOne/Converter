@@ -1,4 +1,4 @@
-﻿using SimcToBrConverter.ActionLines;
+﻿using SimcToBrConverter.Utilities;
 
 namespace SimcToBrConverter.ActionHandlers
 {
@@ -6,26 +6,20 @@ namespace SimcToBrConverter.ActionHandlers
     {
         public ActionListActionHandler() : base() { }
 
-        public override bool CanHandle(ActionLine actionLine)
+        public override bool CanHandle()
         {
-            return actionLine.Action.Contains("run_action_list") || actionLine.Action.Contains("call_action_list");
+            return Program.currentActionLine.Action.Contains("run_action_list") || Program.currentActionLine.Action.Contains("call_action_list");
         }
 
-        protected override ActionLine CheckHandling(ActionLine actionLine)
+        public override void Handle()
         {
-            if (actionLine.Action.Contains("run_action_list") || actionLine.Action.Contains("call_action_list"))
+            if (Program.currentActionLine.Action.Contains("run_action_list") || Program.currentActionLine.Action.Contains("call_action_list"))
             {
-                actionLine.Type = ActionType.ActionList;
+                Program.currentActionLine.Type = ActionType.ActionList;
                 // Extract the name of the action list from the SpecialHandling property
-                var actionListName = actionLine.SpecialHandling.Replace("name=", "").Trim();
-                actionLine.Action = $"actionList.{actionListName}";
-
-                // Return a new ActionLine with the extracted action list name as the action
-                return actionLine;
+                var actionListName = Program.currentActionLine.SpecialHandling.Replace("name=", "").Trim();
+                Program.currentActionLine.Action = $"actionList.{actionListName}";
             }
-
-            // If the action doesn't match the expected patterns, return the original ActionLine
-            return actionLine;
         }
 
     }

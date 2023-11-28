@@ -1,10 +1,8 @@
-﻿using SimcToBrConverter.ActionLines;
-
-namespace SimcToBrConverter.ActionHandlers
+﻿namespace SimcToBrConverter.ActionHandlers
 {
     public interface IActionHandler
     {
-        bool CanHandle(ActionLine actionLine);
-        ActionLine Handle(ActionLine actionLine);
+        bool CanHandle();
+        void Handle();
     }
 }

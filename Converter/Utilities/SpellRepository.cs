@@ -42,16 +42,17 @@
             ");
 
             // Sort the types alphabetically and print spells by type
+            Console.WriteLine("local spells = {");
             foreach (var typeEntry in spellsByType.OrderBy(t => t.Key))
             {
-                Console.WriteLine($"{typeEntry.Key} = {{");
+                Console.WriteLine($"    {typeEntry.Key} = {{");
                 foreach (var spellName in typeEntry.Value)
                 {
-                    Console.WriteLine($"    {spellName},");
+                    Console.WriteLine($"        {spellName},");
                 }
-                Console.WriteLine("},");
-                Console.WriteLine();
+                Console.WriteLine("    },");
             }
+            Console.WriteLine("}");
         }
 
     }

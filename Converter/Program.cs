@@ -1,6 +1,9 @@
 ﻿using SimcToBrConverter.ActionHandlers;
 using SimcToBrConverter.ActionLines;
-using SimcToBrConverter.Conditions;
+using SimcToBrConverter.ConditionConverters;
+using SimcToBrConverter.LuaGenerators;
+using SimcToBrConverter.SpecialHandlers;
+using SimcToBrConverter.Utilities;
 
 namespace SimcToBrConverter
 {
@@ -8,6 +11,24 @@ namespace SimcToBrConverter
     {
         private static string PROFILE_URL = "https://github.com/simulationcraft/simc/blob/dragonflight/profiles/Tier31/T31_Demon_Hunter_Havoc.simc";
 
+        // Define Components
+        public static readonly List<IActionHandler> actionHandlers = GetActionHandlers();
+        public static readonly List<ISpecialHandler> specialHandlers = GetSpecialHandlers();
+        public static readonly List<IConditionConverter> conditionConverters = GetConditionConverters();
+        public static readonly List<ILuaGenerator> luaGenerators = GetLuaGenerators();
+        public static readonly ConditionConversionService conditionConversionService = new(conditionConverters);
+        public static ActionLine currentActionLine = new();
+        public static ActionLine previousActionLine = new();
+        public static List<string> notConverted = new();
+        public static List<ConversionResult> conversionResults = new();
+        public static List<string> extraVars = new();
+
+        /// <summary>
+        /// Asynchronously downloads a SimulationCraft profile from the specified URL, processes the profile to generate Lua code, and prints the Lua code along with the spell list.
+        /// </summary>
+        /// <returns>
+        /// A task representing the asynchronous operation.
+        /// </returns>
         static async Task Main()
         {
             // Always use the raw.githubusercontent.com URL
@@ -20,18 +41,18 @@ namespace SimcToBrConverter
             // Download the SimulationCraft profile
             string profile = await DownloadProfile(PROFILE_URL);
 
+            // Parse the SimulationCraft profile
             var actionLines = ParseActions(profile.Split('\n'));
-
-            // Define the condition converters and action handlers
-            var conditionConverters = GetConditionConverters();
-            var actionHandlers = GetActionHandlers();
-            var conditionConversionService = new ConditionConversionService(conditionConverters);
+            ProcessActionLines(actionLines);
 
             // Generate and print the Lua code
-            LuaCodeGenerator.GenerateLuaCode(actionLines, actionHandlers, conditionConversionService);
+            string luaCode = LuaCodeGenerator.GenerateLuaCode();
 
             // Print the Lua code
-            //Console.WriteLine(luaCode);
+            Console.WriteLine(luaCode);
+
+            // Print spell list
+            SpellRepository.PrintSpellsByType();
         }
 
         /// <summary>
@@ -60,6 +81,30 @@ namespace SimcToBrConverter
         public static HashSet<string> Locals { get; set; } = new HashSet<string>();
 
         /// <summary>
+        /// Returns a list of ILuaGenerator implementations.
+        /// </summary>
+        /// <returns>
+        /// List of ILuaGenerator implementations.
+        /// </returns>
+        public static List<ILuaGenerator> GetLuaGenerators()
+        {
+            return new List<ILuaGenerator>
+            {
+                new ActionListLuaGenerator(),
+                new LoopLuaGenerator(),
+                new MaxMinLuaGenerator(),
+                new ModuleLuaGenerator(),
+                new PoolLuaGenerator(),
+                new RetargetLuaGenerator(),
+                new UseItemLuaGenerator(),
+                new VariableLuaGenerator(),
+                new WaitLuaGenerator(),
+                new DefaultLuaGenerator()
+            };
+        }
+
+
+        /// <summary>
         /// Retrieves a list of condition converters used for action conversion.
         /// </summary>
         /// <returns>A list of condition converters.</returns>
@@ -83,19 +128,38 @@ namespace SimcToBrConverter
         }
 
         /// <summary>
-        /// Retrieves a list of action handlers used for action conversion.
+        /// Returns a list of ISpecialHandler objects.
         /// </summary>
-        /// <param name="conditionConverters">A list of condition converters to be used by the action handlers.</param>
-        /// <returns>A list of action handlers.</returns>
+        /// <returns>
+        /// List of ISpecialHandler objects.
+        /// </returns>
+        public static List<ISpecialHandler> GetSpecialHandlers()
+        {
+            return new List<ISpecialHandler>
+            {
+                new LineCdSpecialHandler(),
+                new MaxEnergySpecialHandler(),
+                new NameSpecialHandler(),
+                new TargetIfSpecialHandler(),
+            };
+        }
+
+        /// <summary>
+        /// Returns a list of action handlers including default action handler as the last item.
+        /// </summary>
+        /// <returns>
+        /// List of IActionHandler
+        /// </returns>
         private static List<IActionHandler> GetActionHandlers()
         {
             return new List<IActionHandler>
             {
                 new ActionListActionHandler(),
-                new PoolAndWaitActionHandler(),
-                new TargetIfActionHandler(),
+                new PoolActionHandler(),
+                new RetargetActionHandler(),
                 new UseItemActionHandler(),
                 new VariableActionHandler(),
+                new WaitActionHandler(),
                 // DefaultActionHandler should always be the last in the list to ensure it acts as a fallback.
                 new DefaultActionHandler()
             };
@@ -109,7 +173,7 @@ namespace SimcToBrConverter
         private static List<ActionLine> ParseActions(string[] profileLines)
         {
             List<ActionLine> actionLines = new();
-            string poolCondition = string.Empty;
+            //string poolCondition = string.Empty;
 
             foreach (var line in profileLines)
             {
@@ -118,15 +182,10 @@ namespace SimcToBrConverter
                     var result = ActionLineParser.ParseActionLine(line);
                     if (result is ActionLine singleResult)
                     {
-                        poolCondition = HandlePool(poolCondition, singleResult);
                         actionLines.Add(singleResult);
                     }
                     else if (result is MultipleActionLineResult multipleResult)
                     {
-                        foreach (ActionLine singleLine in multipleResult.ActionLines)
-                        {
-                            poolCondition = HandlePool(poolCondition, singleLine);
-                        }
                         actionLines.AddRange(multipleResult.ActionLines);
                     }
                 }
@@ -135,18 +194,50 @@ namespace SimcToBrConverter
             return actionLines;
         }
 
-        private static string HandlePool(string poolCondition, ActionLine line)
+
+        /// <summary>
+        /// Processes the list of action lines, handles special and non-special actions, and converts conditions using the condition conversion service.
+        /// </summary>
+        /// <param name="actionLines">The list of action lines to be processed.</param>
+        private static void ProcessActionLines(List<ActionLine> actionLines)
         {
-            if (!string.IsNullOrEmpty(poolCondition))
+            foreach (var actionLine in actionLines)
             {
-                line.PoolCondition = $"pool_if={poolCondition}";
-                return string.Empty;
+                currentActionLine = actionLine;
+                notConverted = new();
+                // Process Actions
+                foreach (var actionHandler in actionHandlers)
+                {
+                    if (actionHandler.CanHandle())
+                    {
+                        actionHandler.Handle();
+                        break; // Only one action handler should handle an action line
+                    }
+                }
+                // Process Special Handling
+                foreach (var specialHandler in specialHandlers)
+                {
+                    if (specialHandler.CanHandle())
+                    {
+                        specialHandler.Handle(); // There could be multiple special handlers for a single action line
+                    }
+                }
+                if (currentActionLine.Type == ActionType.Ignore) continue;
+                // Process Conditions
+                if (string.IsNullOrEmpty(currentActionLine.Condition) && !string.IsNullOrEmpty(currentActionLine.Value))
+                {
+                    // If there is no condition, but there is a value, then treat the value as the condition for conversion purposes and restore the value
+                    currentActionLine.Condition = currentActionLine.Value;
+                    conditionConversionService.ConvertCondition();
+                    currentActionLine.Value = currentActionLine.Condition;
+                    currentActionLine.Condition = string.Empty;
+                }
+                else
+                    conditionConversionService.ConvertCondition();
+                // Add to Results
+                ConversionResult conversionResult = new(currentActionLine, notConverted, "");
+                conversionResults.Add(conversionResult);
             }
-            if (line.Action.Contains("pool_resource") && line.SpecialHandling.Contains("for_next=1"))
-            {
-                return line.Condition;
-            }
-            return string.Empty;
         }
     }
 }
