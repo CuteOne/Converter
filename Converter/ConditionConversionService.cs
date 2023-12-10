@@ -47,9 +47,10 @@ namespace SimcToBrConverter
                 string conditionPart = actionLine.Conditions[i];
 
                 // Check for special conditions that should be removed or replaced
-                /*if (IsUnconvertableConditionPart(conditionPart))
+                if (IsUnconvertableConditionPart(conditionPart))
                 {
-                    string fullCondition = actionLine.Condition;//convertedConditions.ToString() + string.Join("", actionLine.Conditions.GetRange(i, actionLine.Conditions.Count - i));
+                    convertedConditions.Append("notConvertable");
+                    /*string fullCondition = actionLine.Condition;//convertedConditions.ToString() + string.Join("", actionLine.Conditions.GetRange(i, actionLine.Conditions.Count - i));
                     var (replacement, leftBoundary, rightBoundary) = DetermineReplacementForUnconvertable(fullCondition, i);
 
                     // Ensure boundaries are within the StringBuilder's length
@@ -65,11 +66,11 @@ namespace SimcToBrConverter
 
                     // Adjust the loop index - set it to the position after the replaced section
                     i = leftBoundary + replacement.Length - 1;
-                    continue;
-                }*/
+                    continue;*/
+                }
 
                 // Handling special operators >? and <?
-                if (conditionPart == ">?" || conditionPart == "<?")
+                else if (conditionPart == ">?" || conditionPart == "<?")
                 {
                     string operatorFunction = conditionPart == ">?" ? "math.max" : "math.min";
 
@@ -290,13 +291,13 @@ namespace SimcToBrConverter
 
         /*private static string DetermineReplacementForUnconvertable(string fullCondition, int currentIndex)
         {
-            string leftReplacement = CheckForLogicalOperatorAndBoundaries(fullCondition, currentIndex - 1, true);
+            string? leftReplacement = CheckForLogicalOperatorAndBoundaries(fullCondition, currentIndex - 1, true);
             if (leftReplacement != null)
             {
                 return leftReplacement;
             }
 
-            string rightReplacement = CheckForLogicalOperatorAndBoundaries(fullCondition, currentIndex + 1, false);
+            string? rightReplacement = CheckForLogicalOperatorAndBoundaries(fullCondition, currentIndex + 1, false);
             if (rightReplacement != null)
             {
                 return rightReplacement;
@@ -305,7 +306,7 @@ namespace SimcToBrConverter
             return "PLACEHOLDER_REMOVE"; // Default to false if no logical operator is found
         }*/
 
-        private static string CheckForLogicalOperatorAndBoundaries(string condition, int index, bool isLeftSearch)
+        private static string? CheckForLogicalOperatorAndBoundaries(string condition, int index, bool isLeftSearch)
         {
             if (isLeftSearch)
             {

@@ -22,7 +22,12 @@ namespace SimcToBrConverter.LuaGenerators
             }
             else
             {
-                output.AppendLine($"    {formattedCommand} = {conversionResult.ActionLine.Value}");
+                if (string.IsNullOrEmpty(conversionResult.ActionLine.Value))
+                {
+                    output.AppendLine($"    {formattedCommand} = false -- TODO: Optional replace with UI option, review SimC for detailed notes");
+                }
+                else
+                    output.AppendLine($"    {formattedCommand} = {conversionResult.ActionLine.Value}");
             }
 
             return output.ToString();

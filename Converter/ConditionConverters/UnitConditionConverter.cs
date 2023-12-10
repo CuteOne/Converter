@@ -15,6 +15,7 @@
             return condition.StartsWith("fight_remains") ||
                     condition.StartsWith("fight_style") ||
                     condition.StartsWith("in_combat") ||
+                    condition.StartsWith("movement") ||
                     condition.StartsWith("target.") ||
                     condition.StartsWith("time");
         }
@@ -31,7 +32,7 @@
             string result;
             bool negate = false;
             bool converted = true;
-            if (conditionType == "fight_remains" || conditionType == "fight_style" || conditionType == "in_combat" || conditionType == "time")
+            if (conditionType == "fight_remains" || conditionType == "fight_style" || conditionType == "movement" || conditionType == "in_combat" || conditionType == "time")
             {
                 task = conditionType;
             }
@@ -52,6 +53,9 @@
                     break;
                 case "in_combat":
                     result = "unit.inCombat()";
+                    break;
+                case "movement":
+                    result = $"unit.{spell}()";
                     break;
                 case "time":
                     result = "unit.combatTime()";
